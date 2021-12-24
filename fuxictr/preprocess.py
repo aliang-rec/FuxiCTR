@@ -38,8 +38,10 @@ class Tokenizer(object):
         self.vocab_size = 0 # include oov and padding
         self.max_len = max_len
         self.padding = padding
+        self.use_padding = False
 
     def fit_on_texts(self, texts, use_padding=False):
+        self.use_padding = use_padding
         word_counts = Counter()
         if self._splitter is not None: # for sequence
             max_len = 0
@@ -54,9 +56,9 @@ class Tokenizer(object):
         else:
             tokens = list(texts)
             word_counts = Counter(tokens)
-        self.build_vocab(word_counts, use_padding=use_padding)
+        self.build_vocab(word_counts)
 
-    def build_vocab(self, word_counts, use_padding=False):
+    def build_vocab(self, word_counts):
         # sort to guarantee the determinism of index order
         word_counts = sorted(word_counts.items(), key=lambda x: (-x[1], x[0]))
         words = []
@@ -68,7 +70,7 @@ class Tokenizer(object):
             words = words[0:self._topk_words]
         self.vocab = dict((token, idx) for idx, token in enumerate(words, 1 + self.oov_token))
         self.vocab["__OOV__"] = self.oov_token
-        if use_padding:
+        if self.use_padding:
             self.vocab["__PAD__"] = len(words) + self.oov_token + 1 # use the last index for __PAD__
         self.vocab_size = len(self.vocab) + self.oov_token
 
@@ -139,8 +141,7 @@ class Normalizer(object):
 
     def fit(self, X):
         if not self.callable:
-            null_index = np.isnan(X)
-            self.normalizer.fit(X[~null_index].reshape(-1, 1))
+            self.normalizer.fit(X.reshape(-1, 1))
 
     def normalize(self, X):
         if self.callable:

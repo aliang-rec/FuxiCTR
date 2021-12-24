@@ -51,7 +51,6 @@ class EmbeddingDictLayer(nn.Module):
     def __init__(self, 
                  feature_map, 
                  embedding_dim, 
-                 embedding_dim_dict={},
                  load_pretrain=True,
                  required_feature_columns=[],
                  not_required_feature_columns=[]):
@@ -61,14 +60,18 @@ class EmbeddingDictLayer(nn.Module):
         self.not_required_feature_columns = not_required_feature_columns
         self.embedding_layer = nn.ModuleDict()
         self.seq_encoder_layer = nn.ModuleDict()
+        self.embedding_hooks = nn.ModuleDict()
         for feature, feature_spec in self._feature_map.feature_specs.items():
             if self.is_required(feature):
                 # Set embedding_layer according to share_embedding
                 if "share_embedding" in feature_spec:
                     self.embedding_layer[feature] = self.embedding_layer[feature_spec["share_embedding"]]
-                feat_emb_dim = embedding_dim_dict.get(feature, embedding_dim)
                 if embedding_dim == 1:
                     feat_emb_dim = embedding_dim # keep embedding_dim=1 for LR
+                else:
+                    feat_emb_dim = feature_spec.get("embedding_dim", embedding_dim)
+                    if "pretrained_emb" in feature_spec:
+                        self.embedding_hooks[feature] = nn.Linear(feat_emb_dim, embedding_dim)
                 if feature_spec["type"] == "numeric":
                     if feature not in self.embedding_layer:
                         self.embedding_layer[feature] = nn.Linear(1, feat_emb_dim, bias=False)
@@ -170,6 +173,8 @@ class EmbeddingDictLayer(nn.Module):
                         embedding_vec = self.seq_encoder_layer[feature](seq_embed_matrix)
                     else:
                         embedding_vec = seq_embed_matrix
+                if feature in self.embedding_hooks:
+                    embedding_vec = self.embedding_hooks[feature](embedding_vec)
                 feature_emb_dict[feature] = embedding_vec
         return feature_emb_dict
 

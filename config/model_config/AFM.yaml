@@ -12,7 +12,6 @@ AFM_base:
     embedding_dim: 40
     attention_dim: 40
     attention_dropout: [0, 0]
-    embedding_dropout: 0
     use_attention: True
     epochs: 100
     shuffle: True
@@ -34,7 +33,6 @@ AFM_criteo_x4:
     embedding_dim: 40
     attention_dim: 40
     attention_dropout: [0, 0]
-    embedding_dropout: 0
     use_attention: True
     epochs: 100
     shuffle: True
@@ -56,7 +54,6 @@ AFM_avazu_x4:
     embedding_dim: 40
     attention_dim: 40
     attention_dropout: [0, 0]
-    embedding_dropout: 0
     use_attention: True
     epochs: 100
     shuffle: True
@@ -78,7 +75,6 @@ AFM_kkbox_x4:
     embedding_dim: 40
     attention_dim: 40
     attention_dropout: [0, 0]
-    embedding_dropout: 0
     use_attention: True
     epochs: 100
     shuffle: True

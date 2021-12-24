@@ -30,6 +30,7 @@ import logging
 import json
 from collections import defaultdict
 from .preprocess import Tokenizer, Normalizer
+import sklearn.preprocessing as sklearn_preprocess
 
 
 class FeatureMap(object):
@@ -203,12 +204,8 @@ class FeatureEncoder(object):
                 else:
                     if self.is_share_embedding_with_sequence(name):
                         tokenizer.fit_on_texts(feature_values, use_padding=True)
-                        self.feature_map.feature_specs[name]["padding_idx"] = tokenizer.vocab_size - 1
                     else:
                         tokenizer.fit_on_texts(feature_values, use_padding=False)
-                self.encoders[name + "_tokenizer"] = tokenizer
-                self.feature_map.num_features += tokenizer.vocab_size
-                self.feature_map.feature_specs[name]["vocab_size"] = tokenizer.vocab_size
                 if "pretrained_emb" in feature_column:
                     logging.info("Loading pretrained embedding: " + name)
                     self.feature_map.feature_specs[name]["pretrained_emb"] = "pretrained_embedding.h5"
@@ -219,6 +216,11 @@ class FeatureEncoder(object):
                                                         os.path.join(self.data_dir, "pretrained_embedding.h5"),
                                                         feature_dtype=feature_column.get("dtype"),
                                                         freeze_emb=feature_column.get("freeze_emb", True))
+                if tokenizer.use_padding: # update to account pretrained keys
+                    self.feature_map.feature_specs[name]["padding_idx"] = tokenizer.vocab_size - 1
+                self.encoders[name + "_tokenizer"] = tokenizer
+                self.feature_map.num_features += tokenizer.vocab_size
+                self.feature_map.feature_specs[name]["vocab_size"] = tokenizer.vocab_size
             elif encoder == "numeric_bucket":
                 num_buckets = feature_column.get("num_buckets", num_buckets)
                 qtf = sklearn_preprocess.QuantileTransformer(n_quantiles=num_buckets + 1)
@@ -247,12 +249,6 @@ class FeatureEncoder(object):
                 tokenizer.set_vocab(self.encoders["{}_tokenizer".format(feature_column["share_embedding"])].vocab)
             else:
                 tokenizer.fit_on_texts(feature_values, use_padding=True)
-            self.encoders[name + "_tokenizer"] = tokenizer
-            self.feature_map.num_features += tokenizer.vocab_size
-            self.feature_map.feature_specs[name].update({"encoder": encoder,
-                                                         "padding_idx": tokenizer.vocab_size - 1,
-                                                         "vocab_size": tokenizer.vocab_size,
-                                                         "max_len": tokenizer.max_len})
             if "pretrained_emb" in feature_column:
                 logging.info("Loading pretrained embedding: " + name)
                 self.feature_map.feature_specs[name]["pretrained_emb"] = "pretrained_embedding.h5"
@@ -263,6 +259,12 @@ class FeatureEncoder(object):
                                                     os.path.join(self.data_dir, "pretrained_embedding.h5"),
                                                     feature_dtype=feature_column.get("dtype"),
                                                     freeze_emb=feature_column.get("freeze_emb", True))
+            self.encoders[name + "_tokenizer"] = tokenizer
+            self.feature_map.num_features += tokenizer.vocab_size
+            self.feature_map.feature_specs[name].update({"encoder": encoder,
+                                                         "padding_idx": tokenizer.vocab_size - 1,
+                                                         "vocab_size": tokenizer.vocab_size,
+                                                         "max_len": tokenizer.max_len})
         else:
             raise NotImplementedError("feature_col={}".format(feature_column))
 

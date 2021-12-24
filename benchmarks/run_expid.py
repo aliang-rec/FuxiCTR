@@ -22,7 +22,7 @@ sys.path.append('../')
 from fuxictr import datasets
 from datetime import datetime
 from fuxictr.utils import load_config, set_logger, print_to_json, print_to_list
-from fuxictr.features import FeatureMap
+from fuxictr.features import FeatureMap, FeatureEncoder
 from fuxictr.pytorch import models
 from fuxictr.pytorch.torch_utils import seed_everything
 import gc
@@ -43,6 +43,7 @@ if __name__ == '__main__':
     experiment_id = args['expid']
     params = load_config(args['config'], experiment_id)
     params['gpu'] = args['gpu']
+    params['version'] = args['version']
     set_logger(params)
     logging.info(print_to_json(params))
     seed_everything(seed=params['seed'])
@@ -59,10 +60,10 @@ if __name__ == '__main__':
             raise RuntimeError('feature_map not exist!')
     else: # load data from csv
         try:
-            ds = getattr(datasets, dataset)
+            feature_encoder = getattr(datasets, dataset).FeatureEncoder(**params)
         except:
+            feature_encoder = FeatureEncoder(**params)
             raise RuntimeError('Dataset={} not exist!'.format(dataset))
-        feature_encoder = ds.FeatureEncoder(**params)
         if params.get('use_hdf5') and os.path.exists(feature_encoder.pickle_file):
             feature_encoder = feature_encoder.load_pickle(feature_encoder.pickle_file)
         else: # Build feature_map and transform h5 data
@@ -96,10 +97,14 @@ if __name__ == '__main__':
     # get evaluation results on test
     logging.info('******** Test evaluation ********')
     test_gen = datasets.h5_generator(feature_map, stage='test', **params)
-    test_result = model.evaluate_generator(test_gen)
+    if test_gen:
+        test_result = model.evaluate_generator(test_gen)
+    else:
+        test_gen = {}
     
     # save the results to csv
-    with open(Path(args['config']).stem + '.csv', 'a+') as fw:
+    result_file = Path(args['config']).name.replace(".yaml", "") + '.csv'
+    with open(result_file, 'a+') as fw:
         fw.write(' {},[command] python {},[exp_id] {},[dataset_id] {},[train] {},[val] {},[test] {}\n' \
             .format(datetime.now().strftime('%Y%m%d-%H%M%S'), 
                     ' '.join(sys.argv), experiment_id, params['dataset_id'],

@@ -23,7 +23,7 @@ setuptools.setup(
         "gpu": ["pytorch==1.0.*"],
     },
     classifiers=(
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         'Intended Audience :: Developers',
         'Intended Audience :: Education',
@@ -36,7 +36,7 @@ setuptools.setup(
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ),
-    license="MIT License",
+    license="Apache-2.0 License",
     keywords=['ctr prediction', 'recommender systems',
               'ctr', 'cvr', 'pytorch'],
 )

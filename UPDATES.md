@@ -13,6 +13,7 @@
 + Add support for loading blocks of h5 data
 + Add tests for DIN, FmFM
 + Add tutorials on how to use sequence features and pretrain embeddings
++ Refine the DIN model code
 
 
 ### FuxiCTR v1.0, 2021-10-01

@@ -7,7 +7,6 @@ FM_base:
     optimizer: adam
     learning_rate: 1.0e-3
     regularizer: 0
-    embedding_dropout: 0
     batch_size: 10000
     embedding_dim: 10
     epochs: 100
@@ -25,28 +24,9 @@ FM_criteo_x4:
     optimizer: adam
     learning_rate: 1.0e-3
     regularizer: 0
-    embedding_dropout: 0
     batch_size: 10000
     embedding_dim: 40
     epochs: 100
-    shuffle: True
-    seed: 2019
-    monitor: {'AUC': 1, 'logloss': -1}
-    monitor_mode: 'max'
-
-FM_avazu_test:
-    model: FM
-    dataset_id: avazu_test
-    loss: binary_crossentropy
-    metrics: ['logloss', 'AUC']
-    task: binary_classification
-    optimizer: adam
-    learning_rate: 1.0e-3
-    regularizer: 0
-    embedding_dropout: 0
-    batch_size: 16
-    embedding_dim: 40
-    epochs: 3
     shuffle: True
     seed: 2019
     monitor: {'AUC': 1, 'logloss': -1}
@@ -61,7 +41,6 @@ FM_avazu_x4:
     optimizer: adam
     learning_rate: 1.0e-3
     regularizer: 0
-    embedding_dropout: 0
     batch_size: 10000
     embedding_dim: 40
     epochs: 100
@@ -79,7 +58,6 @@ FM_taobao_x1:
     optimizer: adam
     learning_rate: 1.0e-3
     regularizer: 0
-    embedding_dropout: 0
     batch_size: 10000
     embedding_dim: 40
     epochs: 100
@@ -97,7 +75,6 @@ FM_kkbox_x4:
     optimizer: adam
     learning_rate: 1.0e-3
     regularizer: 0
-    embedding_dropout: 0
     batch_size: 10000
     embedding_dim: 40
     epochs: 100

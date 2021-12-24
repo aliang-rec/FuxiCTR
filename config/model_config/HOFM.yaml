@@ -7,7 +7,6 @@ HOFM_base:
     optimizer: adam
     learning_rate: 1.0e-3
     regularizer: 0
-    embedding_dropout: 0
     order: 4
     batch_size: 10000
     embedding_dim: 10
@@ -27,7 +26,6 @@ HOFM_criteo_x4:
     optimizer: adam
     learning_rate: 1.0e-3
     regularizer: 0
-    embedding_dropout: 0
     order: 4
     batch_size: 10000
     embedding_dim: 10
@@ -47,7 +45,6 @@ HOFM_avazu_x4:
     optimizer: adam
     learning_rate: 1.0e-3
     regularizer: 0
-    embedding_dropout: 0
     order: 4
     batch_size: 10000
     embedding_dim: 10
@@ -67,7 +64,6 @@ HOFM_kkbox_x4:
     optimizer: adam
     learning_rate: 1.0e-3
     regularizer: 0
-    embedding_dropout: 0
     order: 4
     batch_size: 10000
     embedding_dim: 10

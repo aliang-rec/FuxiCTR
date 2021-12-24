@@ -14,7 +14,6 @@ FiGNN_base:
     use_residual: True
     use_gru: True
     reuse_graph_layer: False
-    embedding_dropout: 0
     epochs: 100
     shuffle: True
     seed: 2019
@@ -37,7 +36,6 @@ FiGNN_criteo_x4:
     use_residual: True
     use_gru: True
     reuse_graph_layer: False
-    embedding_dropout: 0
     epochs: 100
     shuffle: True
     seed: 2019
@@ -60,7 +58,6 @@ FiGNN_avazu_x4:
     use_residual: True
     use_gru: True
     reuse_graph_layer: False
-    embedding_dropout: 0
     epochs: 100
     shuffle: True
     seed: 2019
@@ -83,7 +80,6 @@ FiGNN_kkbox_x4:
     use_residual: True
     use_gru: True
     reuse_graph_layer: False
-    embedding_dropout: 0
     epochs: 100
     shuffle: True
     seed: 2019

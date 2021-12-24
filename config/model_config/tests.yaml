@@ -570,7 +570,6 @@ DCNv2_test:
     parallel_dnn_hidden_units: [64, 32]
     dnn_activations: relu
     num_cross_layers: 3
-    embedding_dropout: 0
     net_dropout: 0
     batch_norm: False
     epochs: 1
@@ -588,7 +587,6 @@ FFMv2_test:
     optimizer: adam
     learning_rate: 1.0e-3
     regularizer: 0
-    embedding_dropout: 0
     batch_size: 128
     embedding_dim: 2
     epochs: 1
@@ -609,7 +607,6 @@ ONNv2_test:
     net_regularizer: 0
     hidden_units: [64, 32]
     hidden_activations: relu
-    embedding_dropout: 0
     net_dropout: 0
     batch_norm: False
     batch_size: 128
@@ -661,7 +658,6 @@ DIN_test:
     attention_final_activation: null
     din_query_field: item_id
     din_history_field: click_history
-    embedding_dropout: 0
     net_dropout: 0
     batch_norm: False
     epochs: 1
@@ -703,7 +699,6 @@ DeepIM_test:
     embedding_regularizer: 0
     learning_rate: 1.e-3
     net_batch_norm: False
-    embedding_dropout: 0
     net_dropout: 0
     batch_size: 128
     embedding_dim: 4
@@ -749,9 +744,10 @@ DIN_test:
     embedding_dim: 4
     dnn_hidden_units: [64, 32]
     dnn_activations: relu
-    attention_units: [64]
-    attention_activations: "Dice"
-    attention_final_activation: null
+    attention_hidden_units: [64]
+    attention_hidden_activations: "Dice"
+    attention_output_activation: null
+    attention_dropout: 0
     din_target_field: adgroup_id
     din_sequence_field: click_sequence
     net_dropout: 0

@@ -7,7 +7,6 @@ LorentzFM_criteo_x4:
     optimizer: adam
     learning_rate: 1.0e-3
     regularizer: 0
-    embedding_dropout: 0
     batch_size: 10000
     embedding_dim: 40
     epochs: 100
@@ -25,7 +24,6 @@ LorentzFM_avazu_x4:
     optimizer: adam
     learning_rate: 1.0e-3
     regularizer: 0
-    embedding_dropout: 0
     batch_size: 10000
     embedding_dim: 40
     epochs: 100
@@ -43,7 +41,6 @@ LorentzFM_kkbox_x4:
     optimizer: adam
     learning_rate: 1.0e-3
     regularizer: 0
-    embedding_dropout: 0
     batch_size: 10000
     embedding_dim: 40
     epochs: 100

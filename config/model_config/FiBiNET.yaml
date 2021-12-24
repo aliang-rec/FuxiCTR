@@ -14,7 +14,6 @@ FiBiNET_base:
     hidden_activations: relu
     bilinear_type: field_interaction
     reduction_ratio: 3
-    embedding_dropout: 0
     net_dropout: 0
     batch_norm: False
     epochs: 100
@@ -39,7 +38,6 @@ FiBiNET_criteo_x4:
     hidden_activations: relu
     bilinear_type: field_interaction
     reduction_ratio: 3
-    embedding_dropout: 0
     net_dropout: 0
     batch_norm: False
     epochs: 100
@@ -64,7 +62,6 @@ FiBiNET_avazu_x4:
     hidden_activations: relu
     bilinear_type: field_interaction
     reduction_ratio: 3
-    embedding_dropout: 0
     net_dropout: 0
     batch_norm: False
     epochs: 100
@@ -90,7 +87,6 @@ FiBiNET_kkbox_x4:
     hidden_activations: relu
     bilinear_type: field_interaction
     reduction_ratio: 3
-    embedding_dropout: 0
     net_dropout: 0
     batch_norm: False
     epochs: 100
