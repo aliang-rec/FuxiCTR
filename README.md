@@ -43,7 +43,7 @@ Click-through rate (CTR) prediction is an critical task for many industrial appl
 | WWW'21 | [FmFM](./fuxictr/pytorch/models/FmFM.py) | [FM^2: Field-matrixed Factorization Machines for Recommender Systems](https://arxiv.org/abs/2102.12994) | [:arrow_upper_right:](https://github.com/openbenchmark/BARS/tree/master/ctr_prediction/benchmarks/FmFM) |
 | WWW'21 | [DCN-V2](./fuxictr/pytorch/models/DCNv2.py) | [DCN V2: Improved Deep & Cross Network and Practical Lessons for Web-scale Learning to Rank Systems](https://arxiv.org/abs/2008.13535) | [:arrow_upper_right:](https://github.com/openbenchmark/BARS/tree/master/ctr_prediction/benchmarks/DCNv2) |
 
-:bell: If you are looking for the benchmarking settings and results of the above CTR prediction models, please click on the benchmark hyperlinks in the table. You could also refer to the [BARS-CTR-Prediction](https://openbenchmark.github.io/ctr-prediction) benchmark for more details.
+:bell: If you are looking for the benchmarking settings and results of the above CTR prediction models, please click on the benchmark hyperlinks in the table. You could also refer to the [BARS-CTR-Prediction](https://openbenchmark.github.io/ctr-prediction) website for more details.
 
 
 ## Installation
@@ -80,7 +80,7 @@ Please follow [the guide for installation](./tutorials/v1.1/install_fuxictr.ipyn
 
 
 ## Developer Guide
-[Check an overview of code structure](./docs/FuxiCTR_overview.jpg) for more details on API design.
+[Check an overview of code structure](./docs/FuxiCTR_overview.jpg) for more details on API design. More details are comming.
 
 
 ## Discussion

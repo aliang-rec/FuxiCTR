@@ -71,7 +71,7 @@ class EmbeddingDictLayer(nn.Module):
                 else:
                     feat_emb_dim = feature_spec.get("embedding_dim", embedding_dim)
                     if "pretrained_emb" in feature_spec:
-                        self.embedding_hooks[feature] = nn.Linear(feat_emb_dim, embedding_dim)
+                        self.embedding_hooks[feature] = nn.Linear(feat_emb_dim, embedding_dim, bias=False)
                 if feature_spec["type"] == "numeric":
                     if feature not in self.embedding_layer:
                         self.embedding_layer[feature] = nn.Linear(1, feat_emb_dim, bias=False)
