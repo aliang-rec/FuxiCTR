@@ -63,9 +63,8 @@ if __name__ == '__main__':
             feature_encoder = getattr(datasets, dataset).FeatureEncoder(**params)
         except:
             feature_encoder = FeatureEncoder(**params)
-            raise RuntimeError('Dataset={} not exist!'.format(dataset))
-        if params.get('use_hdf5') and os.path.exists(feature_encoder.pickle_file):
-            feature_encoder = feature_encoder.load_pickle(feature_encoder.pickle_file)
+        if os.path.exists(feature_encoder.json_file):
+            feature_encoder.feature_map.load(feature_encoder.json_file)
         else: # Build feature_map and transform h5 data
             datasets.build_dataset(feature_encoder, **params)
         params["train_data"] = os.path.join(data_dir, 'train*.h5')
