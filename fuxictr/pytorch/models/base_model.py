@@ -59,7 +59,6 @@ class BaseModel(nn.Module):
         self.checkpoint = os.path.abspath(os.path.join(self.model_dir, self.model_id + ".model"))
         self._validation_metrics = kwargs["metrics"]
         self._verbose = kwargs["verbose"]
-        self.evaluate_metrics = evaluate_metrics
 
     def compile(self, optimizer, loss, lr=1e-3):
         try:
@@ -229,6 +228,9 @@ class BaseModel(nn.Module):
             y_true = np.array(y_true, np.float64)
             val_logs = self.evaluate_metrics(y_true, y_pred, self._validation_metrics)
             return val_logs
+
+    def evaluate_metrics(self, y_true, y_pred, metrics):
+        return evaluate_metrics(y_true, y_pred, metrics)
 
     def predict_generator(self, data_generator):
         self.eval()  # set to evaluation mode
