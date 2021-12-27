@@ -1,12 +1,3 @@
-# Copyright (C) 2021. Huawei Technologies Co., Ltd. All rights reserved.
-
-# This program is free software; you can redistribute it and/or modify it under
-# the terms of the MIT license.
-
-# This program is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-# PARTICULAR PURPOSE. See the MIT License for more details.
-
 import sys
 sys.path.append('../')
 import os
@@ -93,7 +84,7 @@ if __name__ == '__main__':
                                                  shuffle=params['shuffle'])
     
     # Model initialization and fitting                                                  
-    model = DeepFM(feature_encoder.feature_map, **params)
+    model = DeepFM(feature_map, **params)
     model.count_parameters() # print number of parameters used in model
     model.fit_generator(train_gen, 
                         validation_data=valid_gen, 

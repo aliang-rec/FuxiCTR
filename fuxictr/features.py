@@ -181,7 +181,7 @@ class FeatureEncoder(object):
                                                 "type": feature_type}
         if "min_categr_count" in feature_column:
             min_categr_count = feature_column["min_categr_count"]
-        self.feature_map.feature_specs[name]["min_categr_count"] = min_categr_count
+            self.feature_map.feature_specs[name]["min_categr_count"] = min_categr_count
         if "embedding_dim" in feature_column:
             self.feature_map.feature_specs[name]["embedding_dim"] = feature_column["embedding_dim"]
         if feature_type == "numeric":
