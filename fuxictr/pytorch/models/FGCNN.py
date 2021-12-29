@@ -18,9 +18,10 @@
 import numpy as np
 from torch import nn
 import torch
-from .base_model import BaseModel
-from ..layers import EmbeddingLayer, InnerProductLayer, MLP_Layer
-from ..torch_utils import set_activation
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import EmbeddingLayer, InnerProductLayer, MLP_Layer
+from fuxictr.pytorch.torch_utils import get_activation
+
 
 class FGCNN(BaseModel):
     def __init__(self, 
@@ -78,11 +79,12 @@ class FGCNN(BaseModel):
                              output_dim=1, 
                              hidden_units=dnn_hidden_units,
                              hidden_activations=dnn_activations,
-                             final_activation=self.get_final_activation(task),
+                             output_activation=self.get_output_activation(task),
                              dropout_rates=net_dropout,
                              batch_norm=dnn_batch_norm)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
 
     def compute_input_dim(self, 
                           embedding_dim, 
@@ -164,14 +166,14 @@ class FGCNN_Layer(nn.Module):
                                     kernel_size=(kernel_height, 1), 
                                     padding=(int((kernel_height - 1) / 2), 0))] \
                        + ([nn.BatchNorm2d(out_channel)] if batch_norm else []) \
-                       + [set_activation(activation),
+                       + [get_activation(activation),
                           nn.MaxPool2d((pooling_size, 1), padding=(input_height % pooling_size, 0))]
             conv_list.append(nn.Sequential(*conv_layer))
             input_height = int(np.ceil(input_height / pooling_size))
             input_dim =  input_height * embedding_dim * out_channel
             output_dim = input_height * embedding_dim * recombined_channel
             recombine_layer = nn.Sequential(nn.Linear(input_dim, output_dim),
-                                            set_activation(activation))
+                                            get_activation(activation))
             recombine_list.append(recombine_layer)
         self.conv_layers = nn.ModuleList(conv_list)
         self.recombine_layers = nn.ModuleList(recombine_list)

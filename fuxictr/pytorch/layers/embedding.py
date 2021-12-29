@@ -25,25 +25,21 @@ from . import sequence
 
 class EmbeddingLayer(nn.Module):
     def __init__(self, 
-                 feature_map, 
+                 feature_map,
                  embedding_dim,
-                 embedding_dropout=0,
-                 load_pretrain=True,
+                 use_pretrain=True,
                  required_feature_columns=[],
                  not_required_feature_columns=[]):
         super(EmbeddingLayer, self).__init__()
         self.embedding_layer = EmbeddingDictLayer(feature_map, 
                                                   embedding_dim,
-                                                  load_pretrain=load_pretrain,
+                                                  use_pretrain=use_pretrain,
                                                   required_feature_columns=required_feature_columns,
                                                   not_required_feature_columns=not_required_feature_columns)
-        self.dropout = nn.Dropout2d(embedding_dropout) if embedding_dropout > 0 else None
 
     def forward(self, X):
         feature_emb_dict = self.embedding_layer(X)
         feature_emb = self.embedding_layer.dict2tensor(feature_emb_dict)
-        if self.dropout is not None:
-            feature_emb = self.dropout(feature_emb)
         return feature_emb
 
 
@@ -51,7 +47,7 @@ class EmbeddingDictLayer(nn.Module):
     def __init__(self, 
                  feature_map, 
                  embedding_dim, 
-                 load_pretrain=True,
+                 use_pretrain=True,
                  required_feature_columns=[],
                  not_required_feature_columns=[]):
         super(EmbeddingDictLayer, self).__init__()
@@ -59,46 +55,49 @@ class EmbeddingDictLayer(nn.Module):
         self.required_feature_columns = required_feature_columns
         self.not_required_feature_columns = not_required_feature_columns
         self.embedding_layer = nn.ModuleDict()
-        self.seq_encoder_layer = nn.ModuleDict()
+        self.sequence_encoder = nn.ModuleDict()
         self.embedding_hooks = nn.ModuleDict()
         for feature, feature_spec in self._feature_map.feature_specs.items():
             if self.is_required(feature):
-                # Set embedding_layer according to share_embedding
-                if "share_embedding" in feature_spec:
-                    self.embedding_layer[feature] = self.embedding_layer[feature_spec["share_embedding"]]
-                if embedding_dim == 1:
-                    feat_emb_dim = embedding_dim # keep embedding_dim=1 for LR
+                if (not use_pretrain) and embedding_dim == 1:
+                    feat_emb_dim = 1 # in case for LR
                 else:
                     feat_emb_dim = feature_spec.get("embedding_dim", embedding_dim)
                     if "pretrained_emb" in feature_spec:
                         self.embedding_hooks[feature] = nn.Linear(feat_emb_dim, embedding_dim, bias=False)
+
+                # Set embedding_layer according to share_embedding
+                if use_pretrain and "share_embedding" in feature_spec:
+                    self.embedding_layer[feature] = self.embedding_layer[feature_spec["share_embedding"]]
+                    self.set_sequence_encoder(feature, feature_spec.get("encoder", None))
+                    continue
+
                 if feature_spec["type"] == "numeric":
-                    if feature not in self.embedding_layer:
-                        self.embedding_layer[feature] = nn.Linear(1, feat_emb_dim, bias=False)
+                    self.embedding_layer[feature] = nn.Linear(1, feat_emb_dim, bias=False)
                 elif feature_spec["type"] == "categorical":
-                    if feature not in self.embedding_layer:
-                        padding_idx = feature_spec.get("padding_idx", None)
-                        embedding_matrix = nn.Embedding(feature_spec["vocab_size"], 
-                                                        feat_emb_dim, 
-                                                        padding_idx=padding_idx)
-                        if load_pretrain and "pretrained_emb" in feature_spec:
-                            embeddings = self.get_pretrained_embedding(feature_map.data_dir, feature, feature_spec)
-                            embedding_matrix = self.set_pretrained_embedding(embedding_matrix, embeddings, 
-                                                                             freeze=feature_spec["freeze_emb"],
-                                                                             padding_idx=padding_idx)
-                        self.embedding_layer[feature] = embedding_matrix
+                    padding_idx = feature_spec.get("padding_idx", None)
+                    embedding_matrix = nn.Embedding(feature_spec["vocab_size"], 
+                                                    feat_emb_dim, 
+                                                    padding_idx=padding_idx)
+                    if use_pretrain and "pretrained_emb" in feature_spec:
+                        embeddings = self.get_pretrained_embedding(feature_map.data_dir, feature, feature_spec)
+                        embedding_matrix = self.set_pretrained_embedding(embedding_matrix, 
+                                                                         embeddings, 
+                                                                         freeze=feature_spec["freeze_emb"],
+                                                                         padding_idx=padding_idx)
+                    self.embedding_layer[feature] = embedding_matrix
                 elif feature_spec["type"] == "sequence":
-                    if feature not in self.embedding_layer:
-                        padding_idx = feature_spec["vocab_size"] - 1
-                        embedding_matrix = nn.Embedding(feature_spec["vocab_size"], 
-                                                        feat_emb_dim, 
-                                                        padding_idx=padding_idx)
-                        if load_pretrain and "pretrained_emb" in feature_spec:
-                            embeddings = self.get_pretrained_embedding(feature_map.data_dir, feature, feature_spec)
-                            embedding_matrix = self.set_pretrained_embedding(embedding_matrix, embeddings, 
-                                                                             freeze=feature_spec["freeze_emb"],
-                                                                             padding_idx=padding_idx)
-                        self.embedding_layer[feature] = embedding_matrix
+                    padding_idx = feature_spec["vocab_size"] - 1
+                    embedding_matrix = nn.Embedding(feature_spec["vocab_size"], 
+                                                    feat_emb_dim, 
+                                                    padding_idx=padding_idx)
+                    if use_pretrain and "pretrained_emb" in feature_spec:
+                        embeddings = self.get_pretrained_embedding(feature_map.data_dir, feature, feature_spec)
+                        embedding_matrix = self.set_pretrained_embedding(embedding_matrix, 
+                                                                         embeddings, 
+                                                                         freeze=feature_spec["freeze_emb"],
+                                                                         padding_idx=padding_idx)
+                    self.embedding_layer[feature] = embedding_matrix
                     self.set_sequence_encoder(feature, feature_spec.get("encoder", None))
 
     def is_required(self, feature):
@@ -113,11 +112,11 @@ class EmbeddingDictLayer(nn.Module):
 
     def set_sequence_encoder(self, feature, encoder):
         if encoder is None or encoder in ["none", "null"]:
-            self.seq_encoder_layer.update({feature: None})
+            self.sequence_encoder.update({feature: None})
         elif encoder == "MaskedAveragePooling":
-            self.seq_encoder_layer.update({feature: sequence.MaskedAveragePooling()})
+            self.sequence_encoder.update({feature: sequence.MaskedAveragePooling()})
         elif encoder == "MaskedSumPooling":
-            self.seq_encoder_layer.update({feature: sequence.MaskedSumPooling()})
+            self.sequence_encoder.update({feature: sequence.MaskedSumPooling()})
         else:
             raise RuntimeError("Sequence encoder={} is not supported.".format(encoder))
 
@@ -169,8 +168,8 @@ class EmbeddingDictLayer(nn.Module):
                 elif feature_spec["type"] == "sequence":
                     inp = X[:, feature_spec["index"]].long()
                     seq_embed_matrix = self.embedding_layer[feature](inp)
-                    if self.seq_encoder_layer[feature] is not None:
-                        embedding_vec = self.seq_encoder_layer[feature](seq_embed_matrix)
+                    if self.sequence_encoder[feature] is not None:
+                        embedding_vec = self.sequence_encoder[feature](seq_embed_matrix)
                     else:
                         embedding_vec = seq_embed_matrix
                 if feature in self.embedding_hooks:

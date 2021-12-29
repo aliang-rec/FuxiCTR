@@ -16,8 +16,9 @@
 
 from torch import nn
 import torch
-from .base_model import BaseModel
-from ..layers import LR_Layer, EmbeddingLayer, MLP_Layer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import LR_Layer, EmbeddingLayer, MLP_Layer
+
 
 class AFN(BaseModel):
     def __init__(self, 
@@ -52,7 +53,7 @@ class AFN(BaseModel):
                                      output_dim=1, 
                                      hidden_units=afn_hidden_units,
                                      hidden_activations=afn_activations,
-                                     final_activation=None, 
+                                     output_activation=None, 
                                      dropout_rates=afn_dropout, 
                                      batch_norm=batch_norm, 
                                      use_bias=True)
@@ -67,14 +68,15 @@ class AFN(BaseModel):
                                  output_dim=1, 
                                  hidden_units=dnn_hidden_units,
                                  hidden_activations=dnn_activations,
-                                 final_activation=None, 
+                                 output_activation=None, 
                                  dropout_rates=dnn_dropout, 
                                  batch_norm=batch_norm, 
                                  use_bias=True)
             self.fc = nn.Linear(2, 1)
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
         
     def forward(self, inputs):
         """
@@ -92,8 +94,8 @@ class AFN(BaseModel):
         else:
             y_pred = afn_out
 
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict
 

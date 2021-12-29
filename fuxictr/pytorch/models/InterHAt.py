@@ -16,8 +16,8 @@
 
 import torch
 from torch import nn
-from .base_model import BaseModel
-from ..layers import MLP_Layer, EmbeddingLayer, ScaledDotProductAttention
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import MLP_Layer, EmbeddingLayer, ScaledDotProductAttention
 
 
 class InterHAt(BaseModel):
@@ -67,12 +67,13 @@ class InterHAt(BaseModel):
                              output_dim=1,
                              hidden_units=hidden_units,
                              hidden_activations=hidden_activations,
-                             final_activation=None,
+                             output_activation=None,
                              dropout_rates=net_dropout,
                              batch_norm=batch_norm)
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
             
     def forward(self, inputs):
         """
@@ -91,8 +92,8 @@ class InterHAt(BaseModel):
         U = torch.stack(agg_u, dim=1) # b x order x emb
         u_f = self.attentional_score(U)
         y_pred = self.mlp(u_f)
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict
 

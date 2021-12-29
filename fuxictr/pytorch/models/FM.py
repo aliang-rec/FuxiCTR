@@ -16,8 +16,8 @@
 
 
 from torch import nn
-from .base_model import BaseModel
-from ..layers import FM_Layer, EmbeddingLayer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import FM_Layer, EmbeddingLayer
 
 
 class FM(BaseModel):
@@ -37,10 +37,11 @@ class FM(BaseModel):
                                  net_regularizer=regularizer,
                                  **kwargs)
         self.embedding_layer = EmbeddingLayer(feature_map, embedding_dim)
-        self.fm_layer = FM_Layer(feature_map, final_activation=self.get_final_activation(task), 
+        self.fm_layer = FM_Layer(feature_map, output_activation=self.get_output_activation(task), 
                                  use_bias=True)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
             
     def forward(self, inputs):
         """

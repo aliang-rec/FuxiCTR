@@ -16,8 +16,8 @@
 
 from torch import nn
 import torch
-from .base_model import BaseModel
-from ..layers import LR_Layer, EmbeddingLayer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import LR_Layer, EmbeddingLayer
 
 
 class FFM(BaseModel):
@@ -37,12 +37,13 @@ class FFM(BaseModel):
                                   net_regularizer=regularizer,
                                   **kwargs)
         self.num_fields = feature_map.num_fields
-        self.lr_layer = LR_Layer(feature_map, final_activation=None, use_bias=True)
+        self.lr_layer = LR_Layer(feature_map, output_activation=None, use_bias=True)
         self.embedding_layers = nn.ModuleList([EmbeddingLayer(feature_map, embedding_dim) 
                                                for x in range(self.num_fields - 1)]) # (F - 1) x F x bs x dim
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
 
     def forward(self, inputs):
         """
@@ -53,8 +54,8 @@ class FFM(BaseModel):
         field_wise_emb_list = [each_layer(X) for each_layer in self.embedding_layers] # (F - 1) list of bs x F x d
         ffm_out = self.ffm_interaction(field_wise_emb_list)
         y_pred = lr_out + ffm_out
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict
 

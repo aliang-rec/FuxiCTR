@@ -21,6 +21,7 @@ import os
 from ..features import FeatureEncoder as BaseFeatureEncoder
 from datetime import datetime, date
 
+
 class FeatureEncoder(BaseFeatureEncoder):
     def convert_hour(self, df, col_name):
         return df['time_stamp'].apply(lambda ts: ts[11:13])

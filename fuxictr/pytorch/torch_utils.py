@@ -31,28 +31,38 @@ def seed_everything(seed=1029):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
 
-def set_device(gpu=-1):
+def get_device(gpu=-1):
     if gpu >= 0 and torch.cuda.is_available():
         device = torch.device("cuda:" + str(gpu))
     else:
         device = torch.device("cpu")   
     return device
 
-def set_optimizer(optimizer):
+def get_optimizer(optimizer, params, lr):
     if isinstance(optimizer, str):
         if optimizer.lower() == "adam":
             optimizer = "Adam"
-        return getattr(torch.optim, optimizer)
+    try:
+        optimizer = getattr(torch.optim, optimizer)(params, lr=lr)
+    except:
+        raise NotImplementedError("optimizer={} is not supported.".format(optimizer))
+    return optimizer
 
-def set_loss(loss):
+def get_loss_fn(loss):
     if isinstance(loss, str):
         if loss in ["bce", "binary_crossentropy", "binary_cross_entropy"]:
             loss = "binary_cross_entropy"
-        else:
+    try:
+        loss_fn = getattr(torch.functional.F, loss)
+    except:
+        try:
+            from . import losses
+            loss_fn = getattr(losses, loss)
+        except:
             raise NotImplementedError("loss={} is not supported.".format(loss))
-    return loss
+    return loss_fn
 
-def set_regularizer(reg):
+def get_regularizer(reg):
     reg_pair = [] # of tuples (p_norm, weight)
     if isinstance(reg, float):
         reg_pair.append((2, reg))
@@ -70,7 +80,7 @@ def set_regularizer(reg):
             raise NotImplementedError("regularizer={} is not supported.".format(reg))
     return reg_pair
 
-def set_activation(activation):
+def get_activation(activation):
     if isinstance(activation, str):
         if activation.lower() == "relu":
             return nn.ReLU()

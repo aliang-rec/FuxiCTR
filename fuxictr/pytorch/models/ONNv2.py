@@ -16,8 +16,8 @@
 
 from torch import nn
 import torch
-from .base_model import BaseModel
-from ..layers import EmbeddingLayer, MLP_Layer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import EmbeddingLayer, MLP_Layer
 
 
 class ONNv2(BaseModel):
@@ -49,16 +49,17 @@ class ONNv2(BaseModel):
                              output_dim=1, 
                              hidden_units=hidden_units,
                              hidden_activations=hidden_activations,
-                             final_activation=None, 
+                             output_activation=None, 
                              dropout_rates=net_dropout, 
                              batch_norm=batch_norm, 
                              use_bias=True)
         self.embedding_layer = EmbeddingLayer(feature_map, embedding_dim * self.num_fields) # b x f x dim*f
         self.diag_mask = torch.eye(self.num_fields).byte().to(self.device)
         self.upper_triange_mask = torch.triu(torch.ones(self.num_fields, self.num_fields), 1).byte().to(self.device)
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
 
     def forward(self, inputs):
         """
@@ -70,8 +71,8 @@ class ONNv2(BaseModel):
         ffm_out = self.ffm_interaction(field_wise_embedding)
         dnn_input = torch.cat([copy_embedding, ffm_out], dim=1)
         y_pred = self.dnn(dnn_input)
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict
 

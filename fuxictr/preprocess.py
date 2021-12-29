@@ -19,16 +19,16 @@ import itertools
 import numpy as np
 import pandas as pd
 import h5py
-import six
 import pickle
 import os
 import sklearn.preprocessing as sklearn_preprocess
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 
 class Tokenizer(object):
-    def __init__(self, topk_words=None, na_value=None, min_freq=1, splitter=None, 
-                 lower=False, oov_token=0, max_len=0, padding="pre"):
-        self._topk_words = topk_words
+    def __init__(self, num_words=None, na_value=None, min_freq=1, splitter=None, 
+                 lower=False, oov_token=0, max_len=0, padding="pre", num_workers=4):
+        self._num_words = num_words
         self._na_value = na_value
         self._min_freq = min_freq
         self._lower = lower
@@ -38,6 +38,7 @@ class Tokenizer(object):
         self.vocab_size = 0 # include oov and padding
         self.max_len = max_len
         self.padding = padding
+        self.num_workers = num_workers
         self.use_padding = False
 
     def fit_on_texts(self, texts, use_padding=False):
@@ -45,17 +46,17 @@ class Tokenizer(object):
         word_counts = Counter()
         if self._splitter is not None: # for sequence
             max_len = 0
-            for text in texts:
-                if not pd.isnull(text):
-                    text_split = text.split(self._splitter)
-                    max_len = max(max_len, len(text_split))
-                    for text in text_split:
-                        word_counts[text] += 1
-            if self.max_len == 0:
-                self.max_len = max_len # use pre-set max_len otherwise
+            with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
+                chunks = np.array_split(texts, self.num_workers)
+                tasks = [executor.submit(count_tokens, chunk, self._splitter) for chunk in chunks]
+                for future in tqdm(as_completed(tasks), total=len(tasks)):
+                    block_word_counts, block_max_len = future.result()
+                    word_counts.update(block_word_counts)
+                    max_len = max(max_len, block_max_len)
+            if self.max_len == 0:  # if argument max_len not given
+                self.max_len = max_len
         else:
-            tokens = list(texts)
-            word_counts = Counter(tokens)
+            word_counts = Counter(list(texts))
         self.build_vocab(word_counts)
 
     def build_vocab(self, word_counts):
@@ -66,8 +67,8 @@ class Tokenizer(object):
             if count >= self._min_freq:
                 if self._na_value is None or token != self._na_value:
                     words.append(token.lower() if self._lower else token)
-        if self._topk_words:
-            words = words[0:self._topk_words]
+        if self._num_words:
+            words = words[0:self._num_words]
         self.vocab = dict((token, idx) for idx, token in enumerate(words, 1 + self.oov_token))
         self.vocab["__OOV__"] = self.oov_token
         if self.use_padding:
@@ -109,11 +110,11 @@ class Tokenizer(object):
             embedding_matrix = np.random.normal(loc=0, scale=1.e-4, size=(self.vocab_size, embedding_dim))
         if "__PAD__" in self.vocab:
             self.vocab["__PAD__"] = self.vocab_size - 1
-            embedding_matrix[-1, :] = 0  # set as zero vector for PAD
+            embedding_matrix[-1, :] = 0 # set as zero vector for PAD
         for word in pretrained_vocab.keys():
             embedding_matrix[self.vocab[word]] = pretrained_emb[pretrained_vocab[word]]
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with h5py.File(output_path, 'a') as hf:
+        with h5py.File(output_path, 'w') as hf:
             hf.create_dataset(feature_name, data=embedding_matrix)
 
     def load_vocab_from_file(self, vocab_file):
@@ -124,7 +125,18 @@ class Tokenizer(object):
     def set_vocab(self, vocab):
         self.vocab = vocab
         self.vocab_size = len(self.vocab) + self.oov_token
-            
+
+
+def count_tokens(texts, splitter):
+    word_counts = Counter()
+    max_len = 0
+    for text in texts:
+        text_split = text.split(splitter)
+        max_len = max(max_len, len(text_split))
+        for token in text_split:
+            word_counts[token] += 1
+    return word_counts, max_len
+
         
 class Normalizer(object):
     def __init__(self, normalizer):
@@ -152,7 +164,7 @@ class Normalizer(object):
 
 def pad_sequences(sequences, maxlen=None, dtype='int32',
                   padding='pre', truncating='pre', value=0.):
-    """ Pads sequences (list of list) to the ndarray of same length 
+    """ Pads sequences (list of list) to the ndarray of same length.
         This is an equivalent implementation of tf.keras.preprocessing.sequence.pad_sequences
     """
     assert padding in ["pre", "post"], "Invalid padding={}.".format(padding)

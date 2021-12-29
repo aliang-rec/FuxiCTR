@@ -80,7 +80,7 @@ def build_dataset(feature_encoder, train_data=None, valid_data=None, test_data=N
     # fit and transform train_ddf
     train_ddf = feature_encoder.preprocess(train_ddf)
     train_array = feature_encoder.fit_transform(train_ddf, **kwargs)
-    block_size = int(kwargs.get("partition_block_size", 0))
+    block_size = int(kwargs.get("data_block_size", 0))
     if block_size > 0:
         block_id = 0
         for idx in range(0, len(train_array), block_size):
@@ -122,7 +122,7 @@ def build_dataset(feature_encoder, train_data=None, valid_data=None, test_data=N
 def h5_generator(feature_map, stage="both", train_data=None, valid_data=None, test_data=None,
                  batch_size=32, shuffle=True, **kwargs):
     logging.info("Loading data...")
-    if kwargs.get("partition_block_size", 0) > 0: 
+    if kwargs.get("data_block_size", 0) > 0: 
         from ..pytorch.data_generator import DataBlockGenerator as DataGenerator
     else:
         from ..pytorch.data_generator import DataGenerator

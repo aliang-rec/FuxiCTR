@@ -15,8 +15,8 @@
 # =========================================================================
 
 from torch import nn
-from .base_model import BaseModel
-from ..layers import LR_Layer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import LR_Layer
 
 
 class LR(BaseModel):
@@ -35,10 +35,11 @@ class LR(BaseModel):
                                  net_regularizer=regularizer, 
                                  **kwargs)
         self.lr_layer = LR_Layer(feature_map, 
-                                 final_activation=self.get_final_activation(task), 
+                                 output_activation=self.get_output_activation(task), 
                                  use_bias=True)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
 
     def forward(self, inputs):
         """

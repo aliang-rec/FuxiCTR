@@ -16,8 +16,9 @@
 
 import torch
 from torch import nn
-from .base_model import BaseModel
-from ..layers import EmbeddingLayer, MLP_Layer, FM_Layer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import EmbeddingLayer, MLP_Layer, FM_Layer
+
 
 class DeepFM(BaseModel):
     def __init__(self, 
@@ -41,18 +42,19 @@ class DeepFM(BaseModel):
                                      net_regularizer=net_regularizer,
                                      **kwargs)
         self.embedding_layer = EmbeddingLayer(feature_map, embedding_dim)
-        self.fm_layer = FM_Layer(feature_map, final_activation=None, use_bias=False)
+        self.fm_layer = FM_Layer(feature_map, output_activation=None, use_bias=False)
         self.dnn = MLP_Layer(input_dim=embedding_dim * feature_map.num_fields,
                              output_dim=1, 
                              hidden_units=hidden_units,
                              hidden_activations=hidden_activations,
-                             final_activation=None, 
+                             output_activation=None, 
                              dropout_rates=net_dropout, 
                              batch_norm=batch_norm, 
                              use_bias=True)
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
             
     def forward(self, inputs):
         """
@@ -62,7 +64,7 @@ class DeepFM(BaseModel):
         feature_emb = self.embedding_layer(X)
         y_pred = self.fm_layer(X, feature_emb)
         y_pred += self.dnn(feature_emb.flatten(start_dim=1))
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict

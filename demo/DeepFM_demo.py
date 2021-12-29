@@ -50,7 +50,7 @@ if __name__ == '__main__':
               'every_x_epochs': 1,
               'patience': 2,
               'num_workers': 1,
-              'partition_block_size': -1,
+              'data_block_size': -1,
               'verbose': 1,
               'version': 'pytorch',
               'gpu': -1}

@@ -16,9 +16,9 @@
 
 import torch
 from torch import nn
-from .base_model import BaseModel
-from ..layers import MLP_Layer, EmbeddingLayer, LR_Layer, HolographicInteractionLayer
-from itertools import combinations
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import MLP_Layer, EmbeddingLayer, LR_Layer, HolographicInteractionLayer
+
 
 class HFM(BaseModel):
     def __init__(self, 
@@ -45,7 +45,7 @@ class HFM(BaseModel):
                                   net_regularizer=net_regularizer,
                                   **kwargs)
         self.embedding_layer = EmbeddingLayer(feature_map, embedding_dim)
-        self.lr_layer = LR_Layer(feature_map, final_activation=None)
+        self.lr_layer = LR_Layer(feature_map, output_activation=None)
         self.hfm_layer = HolographicInteractionLayer(feature_map.num_fields, interaction_type=interaction_type)
         self.use_dnn = use_dnn
         if self.use_dnn:
@@ -54,14 +54,15 @@ class HFM(BaseModel):
                                  output_dim=1, 
                                  hidden_units=hidden_units,
                                  hidden_activations=hidden_activations,
-                                 final_activation=None,
+                                 output_activation=None,
                                  dropout_rates=net_dropout, 
                                  batch_norm=batch_norm)
         else:
             self.proj_h = nn.Linear(embedding_dim, 1, bias=False)
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
             
     def forward(self, inputs):
         """
@@ -75,8 +76,8 @@ class HFM(BaseModel):
         else:
             hfm_out = self.proj_h(interact_out.sum(dim=1))
         y_pred = hfm_out + self.lr_layer(X)
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict
 

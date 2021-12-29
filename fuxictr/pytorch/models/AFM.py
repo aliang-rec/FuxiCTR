@@ -16,8 +16,9 @@
 
 import torch
 from torch import nn
-from .base_model import BaseModel
-from ..layers import EmbeddingLayer, InnerProductLayer, LR_Layer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import EmbeddingLayer, InnerProductLayer, LR_Layer
+
 
 class AFM(BaseModel):
     def __init__(self, 
@@ -30,7 +31,7 @@ class AFM(BaseModel):
                  attention_dropout=[0, 0],
                  attention_dim=10,
                  use_attention=True,
-                 embedding_regularizer=None, 
+                 embedding_regularizer=None,
                  net_regularizer=None,
                  **kwargs):
         super(AFM, self).__init__(feature_map, 
@@ -42,7 +43,7 @@ class AFM(BaseModel):
         self.use_attention = use_attention
         self.embedding_layer = EmbeddingLayer(feature_map, embedding_dim)
         self.product_layer = InnerProductLayer(feature_map.num_fields, output="elementwise_product")
-        self.lr_layer = LR_Layer(feature_map, final_activation=None, use_bias=True)
+        self.lr_layer = LR_Layer(feature_map, output_activation=None, use_bias=True)
         self.attention = nn.Sequential(nn.Linear(embedding_dim, attention_dim),
                                        nn.ReLU(),
                                        nn.Linear(attention_dim, 1, bias=False),
@@ -50,9 +51,10 @@ class AFM(BaseModel):
         self.weight_p = nn.Linear(embedding_dim, 1, bias=False)
         self.dropout1 = nn.Dropout(attention_dropout[0])
         self.dropout2 = nn.Dropout(attention_dropout[1])
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
 
     def forward(self, inputs):
         X, y = self.inputs_to_device(inputs)
@@ -67,7 +69,7 @@ class AFM(BaseModel):
         else:
             afm_out = torch.flatten(elementwise_product, start_dim=1).sum(dim=-1).unsqueeze(-1)
         y_pred = self.lr_layer(X) + afm_out
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict

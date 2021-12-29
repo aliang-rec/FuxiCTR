@@ -23,9 +23,8 @@
 import torch
 from torch import nn
 import numpy as np
-from .base_model import BaseModel
-from ..layers import EmbeddingDictLayer, MLP_Layer
-from ..layers.activation import Dice
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import EmbeddingDictLayer, MLP_Layer, Dice
 
 
 class DIN(BaseModel):
@@ -74,7 +73,7 @@ class DIN(BaseModel):
                                                              else embedding_dim,
                            attention_units=attention_hidden_units,
                            hidden_activations=attention_hidden_activations,
-                           final_activation=attention_output_activation,
+                           output_activation=attention_output_activation,
                            dropout_rate=attention_dropout,
                            batch_norm=batch_norm,
                            use_softmax=din_use_softmax)
@@ -83,12 +82,13 @@ class DIN(BaseModel):
                              output_dim=1,
                              hidden_units=dnn_hidden_units,
                              hidden_activations=dnn_activations,
-                             final_activation=self.get_final_activation(task), 
+                             output_activation=self.get_output_activation(task), 
                              dropout_rates=net_dropout,
                              batch_norm=batch_norm, 
                              use_bias=True)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
 
     def forward(self, inputs):
         X, y = self.inputs_to_device(inputs)
@@ -122,7 +122,7 @@ class DIN_Attention(nn.Module):
                  embedding_dim=64,
                  attention_units=[32], 
                  hidden_activations="ReLU",
-                 final_activation=None,
+                 output_activation=None,
                  dropout_rate=0,
                  batch_norm=False,
                  use_softmax=False):
@@ -135,7 +135,7 @@ class DIN_Attention(nn.Module):
                                          output_dim=1,
                                          hidden_units=attention_units,
                                          hidden_activations=hidden_activations,
-                                         final_activation=final_activation,
+                                         output_activation=output_activation,
                                          dropout_rates=dropout_rate,
                                          batch_norm=batch_norm, 
                                          use_bias=True)

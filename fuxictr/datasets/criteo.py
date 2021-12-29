@@ -31,8 +31,3 @@ class FeatureEncoder(BaseFeatureEncoder):
             return value
         return df[col_name].map(_convert_to_bucket).astype(int)
 
-def download_criteo():
-	url = ""
-	
-
-

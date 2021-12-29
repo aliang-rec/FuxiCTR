@@ -16,8 +16,8 @@
 
 import torch
 from torch import nn
-from .base_model import BaseModel
-from ..layers import EmbeddingLayer, MLP_Layer, CrossNet
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import EmbeddingLayer, MLP_Layer, CrossNet
 
 
 class DCN(BaseModel):
@@ -48,7 +48,7 @@ class DCN(BaseModel):
                              output_dim=None, # output hidden layer
                              hidden_units=dnn_hidden_units,
                              hidden_activations=dnn_activations,
-                             final_activation=None, 
+                             output_activation=None, 
                              dropout_rates=net_dropout, 
                              batch_norm=batch_norm, 
                              use_bias=True) \
@@ -58,9 +58,10 @@ class DCN(BaseModel):
         if isinstance(dnn_hidden_units, list) and len(dnn_hidden_units) > 0: # if use dnn
             final_dim += dnn_hidden_units[-1]
         self.fc = nn.Linear(final_dim, 1) # [cross_part, dnn_part] -> logit
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
 
     def forward(self, inputs):
         X, y = self.inputs_to_device(inputs)
@@ -73,8 +74,8 @@ class DCN(BaseModel):
         else:
             final_out = cross_out
         y_pred = self.fc(final_out)
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict
 

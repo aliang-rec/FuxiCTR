@@ -19,8 +19,9 @@
 """
 import torch
 from torch import nn
-from .base_model import BaseModel
-from ..layers import EmbeddingLayer, InnerProductLayer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import EmbeddingLayer, InnerProductLayer
+
 
 class FwFM(BaseModel):
     def __init__(self, 
@@ -55,9 +56,10 @@ class FwFM(BaseModel):
             self.linear_weight_layer = nn.Linear(feature_map.num_fields * embedding_dim, 1, bias=False)
         else:
             raise NotImplementedError("linear_type={} is not supported.".format(linear_type))
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
 
     def forward(self, inputs):
         """
@@ -76,8 +78,8 @@ class FwFM(BaseModel):
         elif self._linear_type == "FiLV":
             linear_part = self.linear_weight_layer(feature_emb.flatten(start_dim=1))
         y_pred = poly2_part + linear_part # bias added in poly2_part
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict
 

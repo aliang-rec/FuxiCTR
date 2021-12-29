@@ -18,8 +18,8 @@
 
 import torch
 from torch import nn
-from .base_model import BaseModel
-from ..layers import EmbeddingLayer, MLP_Layer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import EmbeddingLayer, MLP_Layer
 
 
 class DCNv2(BaseModel):
@@ -63,7 +63,7 @@ class DCNv2(BaseModel):
                                          output_dim=None, # output hidden layer
                                          hidden_units=stacked_dnn_hidden_units,
                                          hidden_activations=dnn_activations,
-                                         final_activation=None, 
+                                         output_activation=None, 
                                          dropout_rates=net_dropout, 
                                          batch_norm=batch_norm, 
                                          use_bias=True)
@@ -73,7 +73,7 @@ class DCNv2(BaseModel):
                                           output_dim=None, # output hidden layer
                                           hidden_units=parallel_dnn_hidden_units,
                                           hidden_activations=dnn_activations,
-                                          final_activation=None, 
+                                          output_activation=None, 
                                           dropout_rates=net_dropout, 
                                           batch_norm=batch_norm, 
                                           use_bias=True)
@@ -83,9 +83,10 @@ class DCNv2(BaseModel):
         if self.model_structure == "crossnet_only": # only CrossNet
             final_dim = input_dim
         self.fc = nn.Linear(final_dim, 1)
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
 
     def forward(self, inputs):
         X, y = self.inputs_to_device(inputs)
@@ -102,8 +103,8 @@ class DCNv2(BaseModel):
         elif self.model_structure == "stacked_parallel":
             final_out = torch.cat([self.stacked_dnn(cross_out), self.parallel_dnn(flat_feature_emb)], dim=-1)
         y_pred = self.fc(final_out)
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict
 

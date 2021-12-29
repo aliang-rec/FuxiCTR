@@ -16,8 +16,8 @@
 
 from torch import nn
 import torch
-from .base_model import BaseModel
-from ..layers import LR_Layer, EmbeddingLayer, InnerProductLayer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import LR_Layer, EmbeddingLayer, InnerProductLayer
 from itertools import combinations
 
 
@@ -53,14 +53,15 @@ class HOFM(BaseModel):
                                                    for i in range(order - 1)])
         self.inner_product_layer = InnerProductLayer(feature_map.num_fields)
         self.lr_layer = LR_Layer(feature_map, use_bias=True)
-        self.final_activation = self.get_final_activation(task)
-        self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.output_activation = self.get_output_activation(task)
         self.field_conjunction_dict = dict()
         for order_i in range(3, self.order + 1):
             order_i_conjunction = zip(*list(combinations(range(feature_map.num_fields), order_i)))
             for k, field_index in enumerate(order_i_conjunction):
                 self.field_conjunction_dict[(order_i, k)] = torch.LongTensor(field_index)
+        self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
+        self.reset_parameters()
+        self.model_to_device()
 
     def forward(self, inputs):
         """
@@ -74,8 +75,8 @@ class HOFM(BaseModel):
             order_i_out = self.high_order_interaction(feature_emb if self.reuse_embedding \
                                                       else self.embedding_layers[i - 2](X), order_i=i)
             y_pred += order_i_out
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict
 

@@ -16,8 +16,9 @@
 
 from torch import nn
 import torch
-from .base_model import BaseModel
-from ..layers import MLP_Layer, EmbeddingLayer, MultiHeadSelfAttention, LR_Layer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import MLP_Layer, EmbeddingLayer, MultiHeadSelfAttention, LR_Layer
+
 
 class AutoInt(BaseModel):
     def __init__(self, 
@@ -48,13 +49,13 @@ class AutoInt(BaseModel):
                                       net_regularizer=net_regularizer,
                                       **kwargs) 
         self.embedding_layer = EmbeddingLayer(feature_map, embedding_dim)
-        self.lr_layer = LR_Layer(feature_map, final_activation=None, use_bias=False) \
+        self.lr_layer = LR_Layer(feature_map, output_activation=None, use_bias=False) \
                         if use_wide else None
         self.dnn = MLP_Layer(input_dim=embedding_dim * feature_map.num_fields,
                              output_dim=1, 
                              hidden_units=dnn_hidden_units,
                              hidden_activations=dnn_activations,
-                             final_activation=None, 
+                             output_activation=None, 
                              dropout_rates=net_dropout, 
                              batch_norm=batch_norm, 
                              use_bias=True) \
@@ -70,9 +71,10 @@ class AutoInt(BaseModel):
                                     align_to="output") 
              for i in range(attention_layers)])
         self.fc = nn.Linear(feature_map.num_fields * attention_dim * num_heads, 1)
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
 
     def forward(self, inputs):
         """
@@ -87,8 +89,8 @@ class AutoInt(BaseModel):
             y_pred += self.dnn(feature_emb.flatten(start_dim=1))
         if self.lr_layer is not None:
             y_pred += self.lr_layer(X)
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict
 

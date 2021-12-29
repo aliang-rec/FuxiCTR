@@ -20,8 +20,9 @@ from torch import nn
 import numpy as np
 import logging
 import shutil
-from .base_model import BaseModel
-from ..layers import EmbeddingLayer, MLP_Layer, InnerProductLayer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import EmbeddingLayer, MLP_Layer, InnerProductLayer
+
 
 class FNN(BaseModel):
     def __init__(self, 
@@ -55,14 +56,15 @@ class FNN(BaseModel):
                              output_dim=1, 
                              hidden_units=hidden_units,
                              hidden_activations=hidden_activations,
-                             final_activation=None, 
+                             output_activation=None, 
                              dropout_rates=net_dropout, 
                              batch_norm=batch_norm, 
                              use_bias=True)
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.learning_rate = learning_rate
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
             
     def forward(self, inputs):
         """
@@ -80,8 +82,8 @@ class FNN(BaseModel):
             flat_emb = torch.cat([lr_weights, feature_emb], dim=-1).flatten(start_dim=1)
             y_pred = self.dnn(torch.cat([self.bias.repeat(flat_emb.size(0), 1), flat_emb], dim=-1))
             self._embedding_regularizer = self.dnn_embedding_regularizer
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict
 
@@ -105,7 +107,7 @@ class FNN(BaseModel):
             k += 1
             logging.info("************ Epoch=1 start ************")
             for epoch in range(epochs):
-                epoch_loss = self.train_on_epoch(data_generator, epoch)
+                epoch_loss = self.train_one_epoch(data_generator, epoch)
                 logging.info("Train loss: {:.6f}".format(epoch_loss))
                 logging.info("************ Epoch={} end ************".format(epoch + 1))
                 if self._stop_training:

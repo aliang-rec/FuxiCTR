@@ -17,6 +17,7 @@
 from torch import nn
 import torch
 
+
 class MaskedAveragePooling(nn.Module):
     def __init__(self):
         super(MaskedAveragePooling, self).__init__()

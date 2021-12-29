@@ -16,9 +16,10 @@
 
 import torch
 from torch import nn
-from .base_model import BaseModel
-from ..layers import EmbeddingLayer, InnerProductLayer
 from itertools import combinations
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import EmbeddingLayer, InnerProductLayer
+
 
 class LorentzFM(BaseModel):
     def __init__(self, 
@@ -39,9 +40,10 @@ class LorentzFM(BaseModel):
                                         **kwargs)
         self.embedding_layer = EmbeddingLayer(feature_map, embedding_dim)
         self.inner_product_layer = InnerProductLayer(feature_map.num_fields, output="inner_product")
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
 
     def forward(self, inputs):
         X, y = self.inputs_to_device(inputs)
@@ -49,8 +51,8 @@ class LorentzFM(BaseModel):
         inner_product = self.inner_product_layer(feature_emb) # bs x (field x (field - 1) / 2)
         zeroth_components = self.get_zeroth_components(feature_emb) # batch * field
         y_pred = self.triangle_pooling(inner_product, zeroth_components) 
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict
 

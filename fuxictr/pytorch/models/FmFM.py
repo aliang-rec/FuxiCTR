@@ -19,8 +19,9 @@
 """
 import torch
 from torch import nn
-from .base_model import BaseModel
-from ..layers import EmbeddingLayer, LR_Layer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import EmbeddingLayer, LR_Layer
+
 
 class FmFM(BaseModel):
     def __init__(self, 
@@ -49,12 +50,12 @@ class FmFM(BaseModel):
         elif self.field_interaction_type == "matrixed":
             self.interaction_weight = nn.Parameter(torch.Tensor(self.interact_dim, embedding_dim, embedding_dim))
         nn.init.xavier_normal_(self.interaction_weight)
-        self.lr_layer = LR_Layer(feature_map, final_activation=None)
-        self.upper_triange_mask = torch.triu(torch.ones(self.num_fields, self.num_fields - 1), 0).byte().to(self.device)
-        self.lower_triange_mask = torch.tril(torch.ones(self.num_fields, self.num_fields - 1), -1).byte().to(self.device)
-        self.final_activation = self.get_final_activation(task)
+        self.triu_index = torch.triu(torch.ones(self.num_fields, self.num_fields), 1).nonzero().to(self.device)
+        self.lr_layer = LR_Layer(feature_map, output_activation=None)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
 
     def forward(self, inputs):
         """
@@ -62,19 +63,16 @@ class FmFM(BaseModel):
         """
         X, y = self.inputs_to_device(inputs)
         feature_emb = self.embedding_layer(X)
-        field_wise_emb = feature_emb.unsqueeze(2).repeat(1, 1, self.num_fields - 1, 1)
-        upper_tensor = torch.masked_select(field_wise_emb, self.upper_triange_mask.unsqueeze(-1)) \
-                            .view(-1, self.interact_dim, self.embedding_dim)
+        left_emb = torch.index_select(feature_emb, 1, self.triu_index[:, 0])
+        right_emb = torch.index_select(feature_emb, 1, self.triu_index[:, 1])
         if self.field_interaction_type == "vectorized":
-            upper_tensor = upper_tensor * self.interaction_weight
+            left_emb = left_emb * self.interaction_weight
         elif self.field_interaction_type == "matrixed":
-            upper_tensor = torch.matmul(upper_tensor.unsqueeze(2), self.interaction_weight).squeeze(2)
-        lower_tensor = torch.masked_select(field_wise_emb.transpose(1, 2), self.lower_triange_mask.t().unsqueeze(-1)) \
-                            .view(-1, self.interact_dim, self.embedding_dim)
-        y_pred = (upper_tensor * lower_tensor).flatten(start_dim=1).sum(dim=-1, keepdim=True)
+            left_emb = torch.matmul(left_emb.unsqueeze(2), self.interaction_weight).squeeze(2)
+        y_pred = (left_emb * right_emb).sum(dim=-1).sum(dim=-1, keepdim=True)
         y_pred += self.lr_layer(X)
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict
 

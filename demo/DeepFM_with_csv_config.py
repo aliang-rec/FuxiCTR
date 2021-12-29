@@ -10,6 +10,7 @@ from fuxictr.utils import load_config, set_logger, print_to_json
 from fuxictr.pytorch.models import DeepFM
 from fuxictr.pytorch.torch_utils import seed_everything
 
+
 if __name__ == '__main__':
     # Load params from config files
     config_dir = 'demo_config'

@@ -40,12 +40,12 @@ def load_config(config_dir, experiment_id):
                 found_params[experiment_id] = config_dict[experiment_id]
         if len(found_params) == 2:
             break
-    # Update base setting first so that values can be overrided when conflict 
+    if experiment_id not in found_params:
+        raise ValueError("expid={} not found in config".format(experiment_id))
+    # Update base settings first so that values can be overrided when conflict 
     # with experiment_id settings
     params.update(found_params.get('Base', {}))
     params.update(found_params.get(experiment_id))
-    if 'dataset_id' not in params:
-        raise RuntimeError('experiment_id={} is not valid in config.'.format(experiment_id))
     params['model_id'] = experiment_id
     dataset_params = load_dataset_config(config_dir, params['dataset_id'])
     params.update(dataset_params)

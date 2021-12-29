@@ -17,8 +17,8 @@
 
 import torch
 from torch import nn
-from .base_model import BaseModel
-from ..layers import MLP_Layer, EmbeddingLayer, SqueezeExcitationLayer, BilinearInteractionLayer, LR_Layer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import MLP_Layer, EmbeddingLayer, SqueezeExcitationLayer, BilinearInteractionLayer, LR_Layer
 
 
 class FiBiNET(BaseModel):
@@ -49,19 +49,20 @@ class FiBiNET(BaseModel):
         num_fields = feature_map.num_fields
         self.senet_layer = SqueezeExcitationLayer(num_fields, reduction_ratio)
         self.bilinear_interaction = BilinearInteractionLayer(num_fields, embedding_dim, bilinear_type)
-        self.lr_layer = LR_Layer(feature_map, final_activation=None, use_bias=False)
+        self.lr_layer = LR_Layer(feature_map, output_activation=None, use_bias=False)
         input_dim = num_fields * (num_fields - 1) * embedding_dim
         self.dnn = MLP_Layer(input_dim=input_dim,
                              output_dim=1, 
                              hidden_units=hidden_units, 
                              hidden_activations=hidden_activations,
-                             final_activation=None,
+                             output_activation=None,
                              dropout_rates=net_dropout, 
                              batch_norm=batch_norm, 
                              use_bias=True)
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
 
     def forward(self, inputs):
         """
@@ -75,7 +76,7 @@ class FiBiNET(BaseModel):
         comb_out = torch.flatten(torch.cat([bilinear_p, bilinear_q], dim=1), start_dim=1)
         dnn_out = self.dnn(comb_out)
         y_pred = self.lr_layer(X) + dnn_out
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict

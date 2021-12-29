@@ -16,8 +16,9 @@
 
 from torch import nn
 import torch
-from .base_model import BaseModel
-from ..layers import MLP_Layer, EmbeddingLayer, InnerProductLayer
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import MLP_Layer, EmbeddingLayer, InnerProductLayer
+
 
 class PNN(BaseModel):
     def __init__(self, 
@@ -51,12 +52,13 @@ class PNN(BaseModel):
                              output_dim=1, 
                              hidden_units=hidden_units,
                              hidden_activations=hidden_activations,
-                             final_activation=self.get_final_activation(task),
+                             output_activation=self.get_output_activation(task),
                              dropout_rates=net_dropout, 
                              batch_norm=batch_norm, 
                              use_bias=True) 
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
             
     def forward(self, inputs):
         """

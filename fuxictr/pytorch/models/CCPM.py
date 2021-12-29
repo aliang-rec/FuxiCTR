@@ -16,9 +16,10 @@
 
 from torch import nn
 import torch
-from .base_model import BaseModel
-from ..layers import EmbeddingLayer, CCPM_ConvLayer
-from ...pytorch.torch_utils import set_activation
+from fuxictr.pytorch.models import BaseModel
+from fuxictr.pytorch.layers import EmbeddingLayer, KMaxPooling
+from fuxictr.pytorch.torch_utils import get_activation
+
 
 class CCPM(BaseModel):
     def __init__(self, 
@@ -47,9 +48,10 @@ class CCPM(BaseModel):
                                          activation=activation)
         conv_out_dim = 3 * embedding_dim * channels[-1] # 3 is k-max-pooling size of the last layer
         self.fc = nn.Linear(conv_out_dim, 1)
-        self.final_activation = self.get_final_activation(task)
+        self.output_activation = self.get_output_activation(task)
         self.compile(kwargs["optimizer"], loss=kwargs["loss"], lr=learning_rate)
-        self.apply(self.init_weights)
+        self.reset_parameters()
+        self.model_to_device()
             
     def forward(self, inputs):
         """
@@ -61,12 +63,41 @@ class CCPM(BaseModel):
         conv_out = self.conv_layer(conv_in)
         flatten_out = torch.flatten(conv_out, start_dim=1)
         y_pred = self.fc(flatten_out)
-        if self.final_activation is not None:
-            y_pred = self.final_activation(y_pred)
+        if self.output_activation is not None:
+            y_pred = self.output_activation(y_pred)
         return_dict = {"y_true": y, "y_pred": y_pred}
         return return_dict
 
 
+class CCPM_ConvLayer(nn.Module):
+    """
+    Input X: tensor of shape (batch_size, 1, num_fields, embedding_dim)
+    """
+    def __init__(self, num_fields, channels=[3], kernel_heights=[3], activation="Tanh"):
+        super(CCPM_ConvLayer, self).__init__()
+        if not isinstance(kernel_heights, list):
+            kernel_heights = [kernel_heights] * len(channels)
+        elif len(kernel_heights) != len(channels):
+            raise ValueError("channels={} and kernel_heights={} should have the same length."\
+                             .format(channels, kernel_heights))
+        module_list = []
+        self.channels = [1] + channels
+        layers = len(kernel_heights)
+        for i in range(1, len(self.channels)):
+            in_channels = self.channels[i - 1]
+            out_channels = self.channels[i]
+            kernel_height = kernel_heights[i - 1]
+            module_list.append(nn.ZeroPad2d((0, 0, kernel_height - 1, kernel_height - 1)))
+            module_list.append(nn.Conv2d(in_channels, out_channels, kernel_size=(kernel_height, 1)))
+            if i < layers:
+                k = max(3, int((1 - pow(float(i) / layers, layers - i)) * num_fields))
+            else:
+                k = 3
+            module_list.append(KMaxPooling(k, dim=2))
+            module_list.append(get_activation(activation))
+        self.conv_layer = nn.Sequential(*module_list)
 
+    def forward(self, X):
+        return self.conv_layer(X)
 
 

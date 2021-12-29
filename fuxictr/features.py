@@ -208,12 +208,12 @@ class FeatureEncoder(object):
                         tokenizer.fit_on_texts(feature_values, use_padding=False)
                 if "pretrained_emb" in feature_column:
                     logging.info("Loading pretrained embedding: " + name)
-                    self.feature_map.feature_specs[name]["pretrained_emb"] = "pretrained_embedding.h5"
+                    self.feature_map.feature_specs[name]["pretrained_emb"] = "pretrained_{}.h5".format(name)
                     self.feature_map.feature_specs[name]["freeze_emb"] = feature_column.get("freeze_emb", True)
                     tokenizer.load_pretrained_embedding(name,
                                                         feature_column["pretrained_emb"], 
                                                         feature_column["embedding_dim"],
-                                                        os.path.join(self.data_dir, "pretrained_embedding.h5"),
+                                                        os.path.join(self.data_dir, "pretrained_{}.h5".format(name)),
                                                         feature_dtype=feature_column.get("dtype"),
                                                         freeze_emb=feature_column.get("freeze_emb", True))
                 if tokenizer.use_padding: # update to account pretrained keys
@@ -245,18 +245,20 @@ class FeatureEncoder(object):
             tokenizer = Tokenizer(min_freq=min_categr_count, splitter=splitter, 
                                   na_value=na_value, max_len=max_len, padding=padding)
             if "share_embedding" in feature_column:
+                if feature_column.get("max_len") is None:
+                    tokenizer.fit_on_texts(feature_values, use_padding=True) # Have to get max_len even share_embedding
                 self.feature_map.feature_specs[name]["share_embedding"] = feature_column["share_embedding"]
                 tokenizer.set_vocab(self.encoders["{}_tokenizer".format(feature_column["share_embedding"])].vocab)
             else:
                 tokenizer.fit_on_texts(feature_values, use_padding=True)
             if "pretrained_emb" in feature_column:
                 logging.info("Loading pretrained embedding: " + name)
-                self.feature_map.feature_specs[name]["pretrained_emb"] = "pretrained_embedding.h5"
+                self.feature_map.feature_specs[name]["pretrained_emb"] = "pretrained_{}.h5".format(name)
                 self.feature_map.feature_specs[name]["freeze_emb"] = feature_column.get("freeze_emb", True)
                 tokenizer.load_pretrained_embedding(name,
                                                     feature_column["pretrained_emb"], 
                                                     feature_column["embedding_dim"],
-                                                    os.path.join(self.data_dir, "pretrained_embedding.h5"),
+                                                    os.path.join(self.data_dir, "pretrained_{}.h5".format(name)),
                                                     feature_dtype=feature_column.get("dtype"),
                                                     freeze_emb=feature_column.get("freeze_emb", True))
             self.encoders[name + "_tokenizer"] = tokenizer
