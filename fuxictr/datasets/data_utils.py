@@ -92,30 +92,32 @@ def build_dataset(feature_encoder, train_data=None, valid_data=None, test_data=N
     gc.collect()
 
     # Transfrom valid_ddf
-    valid_ddf = feature_encoder.preprocess(valid_ddf)
-    valid_array = feature_encoder.transform(valid_ddf)
-    if block_size > 0:
-        block_id = 0
-        for idx in range(0, len(valid_array), block_size):
-            save_hdf5(valid_array[idx:(idx + block_size), :], os.path.join(feature_encoder.data_dir, 'valid_part_{}.h5'.format(block_id)))
-            block_id += 1
-    else:
-        save_hdf5(valid_array, os.path.join(feature_encoder.data_dir, 'valid.h5'))
-    del valid_array, valid_ddf
-    gc.collect()
+    if valid_ddf is not None:
+        valid_ddf = feature_encoder.preprocess(valid_ddf)
+        valid_array = feature_encoder.transform(valid_ddf)
+        if block_size > 0:
+            block_id = 0
+            for idx in range(0, len(valid_array), block_size):
+                save_hdf5(valid_array[idx:(idx + block_size), :], os.path.join(feature_encoder.data_dir, 'valid_part_{}.h5'.format(block_id)))
+                block_id += 1
+        else:
+            save_hdf5(valid_array, os.path.join(feature_encoder.data_dir, 'valid.h5'))
+        del valid_array, valid_ddf
+        gc.collect()
 
     # Transfrom test_ddf
-    test_ddf = feature_encoder.preprocess(test_ddf)
-    test_array = feature_encoder.transform(test_ddf)
-    if block_size > 0:
-        block_id = 0
-        for idx in range(0, len(test_array), block_size):
-            save_hdf5(test_array[idx:(idx + block_size), :], os.path.join(feature_encoder.data_dir, 'test_part_{}.h5'.format(block_id)))
-            block_id += 1
-    else:
-        save_hdf5(test_array, os.path.join(feature_encoder.data_dir, 'test.h5'))
-    del test_array, test_ddf
-    gc.collect()
+    if test_ddf is not None:
+        test_ddf = feature_encoder.preprocess(test_ddf)
+        test_array = feature_encoder.transform(test_ddf)
+        if block_size > 0:
+            block_id = 0
+            for idx in range(0, len(test_array), block_size):
+                save_hdf5(test_array[idx:(idx + block_size), :], os.path.join(feature_encoder.data_dir, 'test_part_{}.h5'.format(block_id)))
+                block_id += 1
+        else:
+            save_hdf5(test_array, os.path.join(feature_encoder.data_dir, 'test.h5'))
+        del test_array, test_ddf
+        gc.collect()
     logging.info("Transform csv data to h5 done.")
 
 
@@ -152,12 +154,13 @@ def h5_generator(feature_map, stage="both", train_data=None, valid_data=None, te
 
     if stage in ["both", "test"]:
         test_blocks = glob.glob(test_data)
-        if len(test_blocks) > 1:
-            test_blocks.sort(key=lambda x: int(x.split("_")[-1].split(".")[0]))
-        test_gen = DataGenerator(test_blocks, batch_size=batch_size, shuffle=False, **kwargs)
-        logging.info("Test samples: total/{:d}, pos/{:.0f}, neg/{:.0f}, ratio/{:.2f}%, blocks/{:.0f}" \
-                     .format(test_gen.num_samples, test_gen.num_positives, test_gen.num_negatives,
-                             100. * test_gen.num_positives / test_gen.num_samples, test_gen.num_blocks))
+        if len(test_blocks) > 0:
+            if len(test_blocks) > 1:
+                test_blocks.sort(key=lambda x: int(x.split("_")[-1].split(".")[0]))
+            test_gen = DataGenerator(test_blocks, batch_size=batch_size, shuffle=False, **kwargs)
+            logging.info("Test samples: total/{:d}, pos/{:.0f}, neg/{:.0f}, ratio/{:.2f}%, blocks/{:.0f}" \
+                         .format(test_gen.num_samples, test_gen.num_positives, test_gen.num_negatives,
+                                 100. * test_gen.num_positives / test_gen.num_samples, test_gen.num_blocks))
         if stage == "test":
             logging.info("Loading test data done.")
             return test_gen

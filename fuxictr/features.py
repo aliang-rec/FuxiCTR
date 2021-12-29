@@ -320,7 +320,7 @@ class FeatureEncoder(object):
         raise IOError("pickle_file={} not valid.".format(pickle_file))
 
     def save_pickle(self, pickle_file):
-        logging.info("Pickle feature_encode: " + pickle_file)
+        logging.info("Pickle feature_encoder: " + pickle_file)
         if not os.path.exists(os.path.dirname(pickle_file)):
             os.makedirs(os.path.dirname(pickle_file))
         pickle.dump(self, open(pickle_file, "wb"))
