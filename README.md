@@ -44,9 +44,9 @@ Click-through rate (CTR) prediction is an critical task for many industrial appl
 | WWW'21 | [DCN-V2](./fuxictr/pytorch/models/DCNv2.py) | [DCN V2: Improved Deep & Cross Network and Practical Lessons for Web-scale Learning to Rank Systems](https://arxiv.org/abs/2008.13535) |  |
 
 
-:point_right: Check the [list of open datasets for CTR prediction](https://github.com/openbenchmark/BARS/blob/master/ctr_prediction/datasets)
-:point_right: Check the [benchmarking configurations and results](https://github.com/openbenchmark/BARS/tree/master/ctr_prediction/benchmarks)
-:point_right: Check the [BARS-CTR-Prediction](https://openbenchmark.github.io/ctr-prediction) website for the comprehensive benchmarking results.
++ :point_right: Check the [available dataset splits for CTR prediction](https://github.com/openbenchmark/BARS/blob/master/ctr_prediction/datasets).
++ :point_right: Check the [benchmarking configurations and results](https://github.com/openbenchmark/BARS/tree/master/ctr_prediction/benchmarks).
++ :point_right: Check the [BARS-CTR-Prediction](https://openbenchmark.github.io/ctr-prediction) website for the comprehensive benchmarking results.
 
 
 ## Installation
