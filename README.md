@@ -41,9 +41,14 @@ Click-through rate (CTR) prediction is an critical task for many industrial appl
 | DLP-KDD'20 | [FLEN](./fuxictr/pytorch/models/FLEN.py) | [FLEN: Leveraging Field for Scalable CTR Prediction](https://arxiv.org/abs/1911.04690) | [:arrow_upper_right:](https://github.com/openbenchmark/BARS/tree/master/ctr_prediction/benchmarks/FLEN) |
 | CIKM'20 | [DeepIM](./fuxictr/pytorch/models/DeepIM.py) | [Deep Interaction Machine: A Simple but Effective Model for High-order Feature Interactions](https://dl.acm.org/doi/abs/10.1145/3340531.3412077) | [:arrow_upper_right:](https://github.com/openbenchmark/BARS/tree/master/ctr_prediction/benchmarks/DeepIM) |
 | WWW'21 | [FmFM](./fuxictr/pytorch/models/FmFM.py) | [FM^2: Field-matrixed Factorization Machines for Recommender Systems](https://arxiv.org/abs/2102.12994) | [:arrow_upper_right:](https://github.com/openbenchmark/BARS/tree/master/ctr_prediction/benchmarks/FmFM) |
-| WWW'21 | [DCN-V2](./fuxictr/pytorch/models/DCNv2.py) | [DCN V2: Improved Deep & Cross Network and Practical Lessons for Web-scale Learning to Rank Systems](https://arxiv.org/abs/2008.13535) | [:arrow_upper_right:](https://github.com/openbenchmark/BARS/tree/master/ctr_prediction/benchmarks/DCNv2) |
+| WWW'21 | [DCN-V2](./fuxictr/pytorch/models/DCNv2.py) | [DCN V2: Improved Deep & Cross Network and Practical Lessons for Web-scale Learning to Rank Systems](https://arxiv.org/abs/2008.13535) |  |
 
-:bell: If you are looking for the benchmarking settings and results of the above CTR prediction models, please click on the benchmark hyperlinks in the table. You could also refer to the [BARS-CTR-Prediction](https://openbenchmark.github.io/ctr-prediction) website for more details.
+
+:point_right: Check the list of [open datasets for CTR prediction](https://github.com/openbenchmark/BARS/blob/master/ctr_prediction/datasets)
+
+:point_right: Check the [benchmarking configurations and results](https://github.com/openbenchmark/BARS/tree/master/ctr_prediction/benchmarks)
+ 
+:point_right: Check the [BARS-CTR-Prediction](https://openbenchmark.github.io/ctr-prediction) website for the comprehensive benchmarking results.
 
 
 ## Installation
@@ -60,27 +65,27 @@ Please follow [the guide for installation](./tutorials/v1.1/install_fuxictr.ipyn
 + tqdm
 
 
-## User Guide
+## Tutorials
 
 1. [Run the demo to understand the overall workflow](./tutorials/v1.1/run_the_demo.ipynb)
 
-2. [Run a model with dataset and model config files](./tutorials/v1.1/run_model_with_config_file.ipynb)
+2. [How to use dataset and model config files](./tutorials/v1.1/run_model_with_config_file.ipynb)
 
-3. [Preprocess raw csv data to h5 data](./demo/preprocess_h5_demo.py)
+3. [How to preprocess raw csv data to h5 data](./demo/preprocess_h5_demo.py)
 
-3. [Run a model with h5 data as input](./tutorials/v1.1/run_model_with_h5_input.ipynb)
+3. [How to use h5 data as input](./tutorials/v1.1/run_model_with_h5_input.ipynb)
 
 4. [How to make configurations?](./tutorials/v1.1/how_to_make_configurations.ipynb)
 
-5. [Tune the model hyper-parameters via grid search](./tutorials/v1.1/tune_model_via_grid_search.ipynb)
+5. [How to tune the model hyper-parameters via grid search](./tutorials/v1.1/tune_model_via_grid_search.ipynb)
 
-6. [Run a model with sequence features](./demo/DeepFM_with_sequence_feature.py)
+6. [How to use sequence features](./demo/DeepFM_with_sequence_feature.py)
 
-7. [Run a model with pretrained embeddings](./demo/DeepFM_with_pretrained_emb.py)
+7. [How to use pretrained embeddings](./demo/DeepFM_with_pretrained_emb.py)
 
 
-## Developer Guide
-[Check an overview of code structure](./docs/FuxiCTR_overview.jpg) for more details on API design. More details are comming.
+## FuxiCTR APIs
+[Check an overview of code structure](./docs/FuxiCTR_overview.jpg) for more details on API design. More are comming.
 
 
 ## Discussion
