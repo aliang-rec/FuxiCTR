@@ -8,4 +8,3 @@ Base:
     save_best_only: True
     every_x_epochs: 1
     debug: False
-    partition_block_size: -1

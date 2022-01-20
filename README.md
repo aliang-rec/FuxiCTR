@@ -1,8 +1,8 @@
 # FuxiCTR
 
-This repo is the community dev version of the official release at [huawei-noah/benchmark/FuxiCTR](https://github.com/huawei-noah/benchmark/tree/main/FuxiCTR).
+Click-through rate (CTR) prediction is an critical task for many industrial applications such as online advertising, recommender systems, and sponsored search. FuxiCTR provides an open-source library for CTR prediction, with key features in configurability, tunability, and reproducibility. We hope this project could benefit both researchers and practitioners with the goal of [open benchmarking for CTR prediction](https://openbenchmark.github.io/ctr-prediction).
 
-Click-through rate (CTR) prediction is an critical task for many industrial applications such as online advertising, recommender systems, and sponsored search. FuxiCTR provides an open-source library for CTR prediction, with key features in configurability, tunability, and reproducibility. It also supports the building of the [BARS-CTR-Prediction](https://openbenchmark.github.io/ctr-prediction) benchmark, which aims for open benchmarking for CTR prediction.
+This repo is the community dev version of the official release at [huawei-noah/benchmark/FuxiCTR](https://github.com/huawei-noah/benchmark/tree/main/FuxiCTR).
 
 :bell: If you find our code or benchmarks helpful in your research, please kindly cite the following paper.
 
@@ -46,7 +46,7 @@ Click-through rate (CTR) prediction is an critical task for many industrial appl
 
 + :point_right: Check the [available dataset splits for CTR prediction](https://github.com/openbenchmark/BARS/blob/master/ctr_prediction/datasets).
 + :point_right: Check the [benchmarking configurations and results](https://github.com/openbenchmark/BARS/tree/master/ctr_prediction/benchmarks).
-+ :point_right: Check the [BARS-CTR-Prediction](https://openbenchmark.github.io/ctr-prediction) website for the comprehensive benchmarking results.
++ :point_right: Check the [BARS-CTR-Prediction benchmark website](https://openbenchmark.github.io/ctr-prediction).
 
 
 ## Installation
@@ -63,7 +63,7 @@ Please follow [the guide for installation](./tutorials/v1.1/install_fuxictr.ipyn
 + tqdm
 
 
-## Tutorials
+## Tutorials | [中文教程](./tutorials/README_CN.md)
 
 1. [Run the demo to understand the overall workflow](./tutorials/v1.1/run_the_demo.ipynb)
 
