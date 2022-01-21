@@ -61,9 +61,7 @@ class AFN(BaseModel):
         self.exp_batch_norm = nn.BatchNorm1d(logarithmic_neurons)
         self.ensemble_dnn = ensemble_dnn
         if ensemble_dnn:
-            self.embedding_layer2 = EmbeddingLayer(feature_map, 
-                                                   embedding_dim, 
-                                                   embedding_dropout)
+            self.embedding_layer2 = EmbeddingLayer(feature_map, embedding_dim)
             self.dnn = MLP_Layer(input_dim=embedding_dim * self.num_fields,
                                  output_dim=1, 
                                  hidden_units=dnn_hidden_units,
@@ -87,9 +85,8 @@ class AFN(BaseModel):
         dnn_input = self.logarithmic_net(feature_emb)
         afn_out = self.dense_layer(dnn_input)
         if self.ensemble_dnn:
-            feature_emb_list2 = self.embedding_layer2(X)
-            concate_feature_emb = torch.cat(feature_emb_list2, dim=1)
-            dnn_out = self.dnn(concate_feature_emb)
+            feature_emb2 = self.embedding_layer2(X)
+            dnn_out = self.dnn(feature_emb2.flatten(start_dim=1))
             y_pred = self.fc(torch.cat([afn_out, dnn_out], dim=-1))
         else:
             y_pred = afn_out

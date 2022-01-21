@@ -31,12 +31,12 @@ AFN_test:
     net_regularizer: 0
     batch_size: 128
     embedding_dim: 4
-    logarithmic_neurons: 32
-    afn_hidden_units: [64, 32]
+    logarithmic_neurons: 8
+    afn_hidden_units: [32, 16]
     afn_activations: relu
     afn_dropout: 0
-    ensemble_dnn: False
-    dnn_hidden_units: [64, 32]
+    ensemble_dnn: True
+    dnn_hidden_units: [32, 16]
     dnn_activations: relu
     dnn_dropout: 0
     batch_norm: False
