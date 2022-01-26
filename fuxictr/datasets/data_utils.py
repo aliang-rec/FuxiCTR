@@ -69,16 +69,16 @@ def build_dataset(feature_encoder, train_data=None, valid_data=None, test_data=N
                   test_size=0, split_type="sequential", **kwargs):
     """ Build feature_map and transform h5 data """
     # Load csv data
-    train_ddf = feature_encoder.read_csv(train_data)
-    valid_ddf = feature_encoder.read_csv(valid_data) if valid_data else None
-    test_ddf = feature_encoder.read_csv(test_data) if test_data else None
+    train_ddf = feature_encoder.read_csv(train_data)                                        # 读取数据
+    valid_ddf = feature_encoder.read_csv(valid_data) if valid_data else None                # 判断是否有valid_data
+    test_ddf = feature_encoder.read_csv(test_data) if test_data else None                   # 判断是否有test_data
     
     # Split data for train/validation/test
     if valid_size > 0 or test_size > 0:
         train_ddf, valid_ddf, test_ddf = split_train_test(train_ddf, valid_ddf, test_ddf, 
                                                           valid_size, test_size, split_type)
     # fit and transform train_ddf
-    train_ddf = feature_encoder.preprocess(train_ddf)
+    train_ddf = feature_encoder.preprocess(train_ddf)                                       # 对数据进行编码
     train_array = feature_encoder.fit_transform(train_ddf, **kwargs)
     block_size = int(kwargs.get("data_block_size", 0))
     if block_size > 0:
@@ -87,7 +87,7 @@ def build_dataset(feature_encoder, train_data=None, valid_data=None, test_data=N
             save_hdf5(train_array[idx:(idx + block_size), :], os.path.join(feature_encoder.data_dir, 'train_part_{}.h5'.format(block_id)))
             block_id += 1
     else:
-        save_hdf5(train_array, os.path.join(feature_encoder.data_dir, 'train.h5'))
+        save_hdf5(train_array, os.path.join(feature_encoder.data_dir, 'train.h5'))          # 把train_array保存
     del train_array, train_ddf
     gc.collect()
 

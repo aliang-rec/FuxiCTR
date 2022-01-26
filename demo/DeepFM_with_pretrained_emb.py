@@ -10,6 +10,7 @@ from fuxictr.utils import load_config, set_logger, print_to_json
 from fuxictr.pytorch.models import DeepFM
 from fuxictr.pytorch.torch_utils import seed_everything
 
+
 if __name__ == '__main__':
     # Load params from config files
     config_dir = 'demo_config'
@@ -28,10 +29,10 @@ if __name__ == '__main__':
                                      data_root=params["data_root"])
 
     # Build dataset from csv to h5
-    datasets.build_dataset(feature_encoder, 
+    datasets.build_dataset(feature_encoder,                             # 特征编码
                            train_data=params["train_data"], 
                            valid_data=params["valid_data"], 
-                           test_data=params["test_data"])
+                           test_data=params["test_data"])               # 保存数据集
     
     # Get feature_map that defines feature specs
     feature_map = feature_encoder.feature_map
@@ -44,18 +45,18 @@ if __name__ == '__main__':
                                                  valid_data=os.path.join(data_dir, 'valid.h5'),
                                                  batch_size=params['batch_size'],
                                                  shuffle=params['shuffle'])
-    
+
     # Model initialization and fitting                                                  
-    model = DeepFM(feature_encoder.feature_map, **params)
-    model.count_parameters() # print number of parameters used in model
+    model = DeepFM(feature_encoder.feature_map, **params)       # 初始化模型
+    model.count_parameters()                                    # print number of parameters used in model
     model.fit_generator(train_gen, 
                         validation_data=valid_gen, 
                         epochs=params['epochs'],
                         verbose=params['verbose'])
-    model.load_weights(model.checkpoint) # reload the best checkpoint
-    
+    model.load_weights(model.checkpoint)                        # reload the best checkpoint
+
     logging.info('***** validation results *****')
-    model.evaluate_generator(valid_gen)
+    model.evaluate_generator(valid_gen)                         #
 
     logging.info('***** validation results *****')
     test_gen = datasets.h5_generator(feature_map, 

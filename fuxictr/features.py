@@ -68,26 +68,26 @@ class FeatureMap(object):
     def load(self, json_file):
         logging.info("Load feature_map from json: " + json_file)
         with io.open(json_file, "r", encoding="utf-8") as fd:
-            feature_map = json.load(fd, object_pairs_hook=OrderedDict)
+            feature_map = json.load(fd, object_pairs_hook=OrderedDict)      # 加载特征映射
         if feature_map["dataset_id"] != self.dataset_id:
             raise RuntimeError("dataset_id={} does not match to feature_map!".format(self.dataset_id))
-        self.num_fields = feature_map["num_fields"]
-        self.num_features = feature_map.get("num_features", None)
-        self.input_length = feature_map.get("input_length", None)
-        self.feature_specs = OrderedDict(feature_map["feature_specs"])
+        self.num_fields = feature_map["num_fields"]                         # num field
+        self.num_features = feature_map.get("num_features", None)           # 特征数量
+        self.input_length = feature_map.get("input_length", None)           # 输入长度
+        self.feature_specs = OrderedDict(feature_map["feature_specs"])      # 特征空间
 
-    def save(self, json_file):
+    def save(self, json_file):                                              # 保存特征
         logging.info("Save feature_map to json: " + json_file)
         if not os.path.exists(os.path.dirname(json_file)):
             os.makedirs(os.path.dirname(json_file))
         feature_map = OrderedDict()
-        feature_map["dataset_id"] = self.dataset_id
-        feature_map["num_fields"] = self.num_fields
-        feature_map["num_features"] = self.num_features
-        feature_map["input_length"] = self.input_length
-        feature_map["feature_specs"] = self.feature_specs
+        feature_map["dataset_id"] = self.dataset_id                         # 数据集id
+        feature_map["num_fields"] = self.num_fields                         # 特征field
+        feature_map["num_features"] = self.num_features                     # 特征数量
+        feature_map["input_length"] = self.input_length                     # 输入长度
+        feature_map["feature_specs"] = self.feature_specs                   # 特征数量
         with open(json_file, "w") as fd:
-            json.dump(feature_map, fd, indent=4)
+            json.dump(feature_map, fd, indent=4)                            # 保存特征字典
 
 
 class FeatureEncoder(object):
@@ -99,20 +99,20 @@ class FeatureEncoder(object):
                  version="pytorch", 
                  **kwargs):
         logging.info("Set up feature encoder...")
-        self.data_dir = os.path.join(data_root, dataset_id)
-        self.pickle_file = os.path.join(self.data_dir, "feature_encoder.pkl")
-        self.json_file = os.path.join(self.data_dir, "feature_map.json")
-        self.feature_cols = self._complete_feature_cols(feature_cols)
+        self.data_dir = os.path.join(data_root, dataset_id)         # 数据集位置
+        self.pickle_file = os.path.join(self.data_dir, "feature_encoder.pkl")       # 编码文件
+        self.json_file = os.path.join(self.data_dir, "feature_map.json")            # 这个是
+        self.feature_cols = self._complete_feature_cols(feature_cols)               # 特征列
         self.label_col = label_col
         self.version = version
-        self.feature_map = FeatureMap(dataset_id, self.data_dir, version)
+        self.feature_map = FeatureMap(dataset_id, self.data_dir, version)           # 特征字典映射
         self.encoders = dict()
 
     def _complete_feature_cols(self, feature_cols):
         full_feature_cols = []
-        for col in feature_cols:
-            name_or_namelist = col["name"]
-            if isinstance(name_or_namelist, list):
+        for col in feature_cols:                            # 遍历特征列
+            name_or_namelist = col["name"]                  # 获取特征列名字
+            if isinstance(name_or_namelist, list):          #
                 for _name in name_or_namelist:
                     _col = col.copy()
                     _col["name"] = _name
@@ -125,7 +125,7 @@ class FeatureEncoder(object):
         logging.info("Reading file: " + data_path)
         all_cols = self.feature_cols + [self.label_col]
         dtype_dict = dict((x["name"], eval(x["dtype"]) if isinstance(x["dtype"], str) else x["dtype"]) 
-                          for x in all_cols)
+                          for x in all_cols)                                    # 根据这个字典来取对应的数据类型
         ddf = pd.read_csv(data_path, dtype=dtype_dict, memory_map=True)
         return ddf
 
@@ -139,6 +139,7 @@ class FeatureEncoder(object):
             if "preprocess" in col and col["preprocess"] != "":
                 preprocess_fn = getattr(self, col["preprocess"])
                 ddf[name] = preprocess_fn(ddf, name)
+        # 提取active列
         active_cols = [self.label_col["name"]] + [col["name"] for col in self.feature_cols if col["active"]]
         ddf = ddf.loc[:, active_cols]
         return ddf
@@ -179,7 +180,7 @@ class FeatureEncoder(object):
         feature_source = feature_column.get("source", "")
         self.feature_map.feature_specs[name] = {"source": feature_source,
                                                 "type": feature_type}
-        if "min_categr_count" in feature_column:
+        if "min_categr_count" in feature_column:                        # 判断最小类别统计是否在类别列里
             min_categr_count = feature_column["min_categr_count"]
             self.feature_map.feature_specs[name]["min_categr_count"] = min_categr_count
         if "embedding_dim" in feature_column:
@@ -191,18 +192,18 @@ class FeatureEncoder(object):
                 normalizer.fit(feature_values)
                 self.encoders[name + "_normalizer"] = normalizer
             self.feature_map.num_features += 1
-        elif feature_type == "categorical":
-            encoder = feature_column.get("encoder", "")
+        elif feature_type == "categorical":                           # 判断是否是类别特征
+            encoder = feature_column.get("encoder", "")               # 获取列别编码器
             if encoder != "":
                 self.feature_map.feature_specs[name]["encoder"] = encoder
             if encoder == "":
                 tokenizer = Tokenizer(min_freq=min_categr_count, 
-                                      na_value=feature_column.get("na_value", ""))
-                if "share_embedding" in feature_column:
+                                      na_value=feature_column.get("na_value", ""))          # 编码器
+                if "share_embedding" in feature_column:                                     # 共享embedding
                     self.feature_map.feature_specs[name]["share_embedding"] = feature_column["share_embedding"]
                     tokenizer.set_vocab(self.encoders["{}_tokenizer".format(feature_column["share_embedding"])].vocab)
-                else:
-                    if self.is_share_embedding_with_sequence(name):
+                else:                                                                       #
+                    if self.is_share_embedding_with_sequence(name):                         # 判断是否和序列特征共享embedding
                         tokenizer.fit_on_texts(feature_values, use_padding=True)
                     else:
                         tokenizer.fit_on_texts(feature_values, use_padding=False)

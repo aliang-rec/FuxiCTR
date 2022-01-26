@@ -34,9 +34,9 @@ class Tokenizer(object):
         self._min_freq = min_freq
         self._lower = lower
         self._splitter = splitter
-        self.oov_token = oov_token # use 0 for __OOV__
+        self.oov_token = oov_token                  # use 0 for __OOV__
         self.vocab = dict()
-        self.vocab_size = 0 # include oov and padding
+        self.vocab_size = 0                         # include oov and padding
         self.max_len = max_len
         self.padding = padding
         self.num_workers = num_workers
@@ -45,7 +45,7 @@ class Tokenizer(object):
     def fit_on_texts(self, texts, use_padding=False):
         self.use_padding = use_padding
         word_counts = Counter()
-        if self._splitter is not None: # for sequence
+        if self._splitter is not None:             # for sequence
             max_len = 0
             with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
                 chunks = np.array_split(texts, self.num_workers)

@@ -97,7 +97,7 @@ class BaseModel(nn.Module):
             if type(m) == nn.ModuleDict:
                 for k, v in m.items():
                     if type(v) == nn.Embedding:
-                        if "pretrained_emb" in self._feature_map.feature_specs[k]: # skip pretrained
+                        if "pretrained_emb" in self._feature_map.feature_specs[k]:          # skip pretrained
                             continue
                         if self._embedding_initializer is not None:
                             try:
@@ -214,7 +214,7 @@ class BaseModel(nn.Module):
         return epoch_loss / self._batches_per_epoch
 
     def evaluate_generator(self, data_generator):
-        self.eval()  # set to evaluation mode
+        self.eval()                                             # set to evaluation mode
         with torch.no_grad():
             y_pred = []
             y_true = []

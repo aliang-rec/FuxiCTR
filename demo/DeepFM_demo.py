@@ -10,11 +10,12 @@ from fuxictr.utils import load_config, set_logger, print_to_json
 from fuxictr.pytorch.models import DeepFM
 from fuxictr.pytorch.torch_utils import seed_everything
 
+
 if __name__ == '__main__':
-    feature_cols = [{'name': ["userid","adgroup_id","pid","cate_id","campaign_id","customer","brand","cms_segid",
+    feature_cols = [{'name': ["userid", "adgroup_id", "pid", "cate_id", "campaign_id","customer","brand","cms_segid",
                               "cms_group_id","final_gender_code","age_level","pvalue_level","shopping_level","occupation"],
-                     'active': True, 'dtype': 'str', 'type': 'categorical'}]
-    label_col = {'name': 'clk', 'dtype': float}
+                     'active': True, 'dtype': 'str', 'type': 'categorical'}]        # 特征列
+    label_col = {'name': 'clk', 'dtype': float}                                     # label列
 
     params = {'model_id': 'DeepFM_demo',
               'dataset_id': 'taobao_tiny',
@@ -53,47 +54,47 @@ if __name__ == '__main__':
               'data_block_size': -1,
               'verbose': 1,
               'version': 'pytorch',
-              'gpu': -1}
+              'gpu': -1}                                                    # 参数列
 
     set_logger(params)
-    logging.info(print_to_json(params))
+    logging.info(print_to_json(params))                                     # 打印日志
     seed_everything(seed=params['seed'])
 
     # Set feature_encoder that defines how to preprocess data
     feature_encoder = FeatureEncoder(feature_cols, 
                                      label_col, 
                                      dataset_id=params['dataset_id'], 
-                                     data_root=params["data_root"])
+                                     data_root=params["data_root"])         # 编码器
 
     # Build dataset from csv to h5
     datasets.build_dataset(feature_encoder, 
                            train_data=params["train_data"], 
                            valid_data=params["valid_data"], 
-                           test_data=params["test_data"])
-    
+                           test_data=params["test_data"])                   # 建立数据集
+
     # Get feature_map that defines feature specs
-    feature_map = feature_encoder.feature_map
+    feature_map = feature_encoder.feature_map                               # 编码字典
 
     # Get train and validation data generator from h5
-    data_dir = os.path.join(params['data_root'], params['dataset_id'])
+    data_dir = os.path.join(params['data_root'], params['dataset_id'])      # 数据字典
     train_gen, valid_gen = datasets.h5_generator(feature_map, 
                                                  stage='train', 
                                                  train_data=os.path.join(data_dir, 'train.h5'),
                                                  valid_data=os.path.join(data_dir, 'valid.h5'),
                                                  batch_size=params['batch_size'],
-                                                 shuffle=params['shuffle'])
-    
+                                                 shuffle=params['shuffle'])     # 数据生成
+
     # Model initialization and fitting                                                  
-    model = DeepFM(feature_map, **params)
-    model.count_parameters() # print number of parameters used in model
+    model = DeepFM(feature_map, **params)                                       # 模型
+    model.count_parameters()                                        # print number of parameters used in model
     model.fit_generator(train_gen, 
                         validation_data=valid_gen, 
                         epochs=params['epochs'],
-                        verbose=params['verbose'])
-    model.load_weights(model.checkpoint) # reload the best checkpoint
+                        verbose=params['verbose'])                              # 训练
+    model.load_weights(model.checkpoint)                            # reload the best checkpoint
     
     logging.info('***** validation results *****')
-    model.evaluate_generator(valid_gen)
+    model.evaluate_generator(valid_gen)                             # 评估器
 
     logging.info('***** validation results *****')
     test_gen = datasets.h5_generator(feature_map, 
@@ -101,6 +102,4 @@ if __name__ == '__main__':
                                      test_data=os.path.join(data_dir, 'test.h5'),
                                      batch_size=params['batch_size'],
                                      shuffle=False)
-    model.evaluate_generator(test_gen)
-
-
+    model.evaluate_generator(test_gen)                              # 验证

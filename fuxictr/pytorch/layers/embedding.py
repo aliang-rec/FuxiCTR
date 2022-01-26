@@ -74,7 +74,7 @@ class EmbeddingDictLayer(nn.Module):
 
                 if feature_spec["type"] == "numeric":
                     self.embedding_layer[feature] = nn.Linear(1, feat_emb_dim, bias=False)
-                elif feature_spec["type"] == "categorical":
+                elif feature_spec["type"] == "categorical":                     # 如果这个是类别特征，
                     padding_idx = feature_spec.get("padding_idx", None)
                     embedding_matrix = nn.Embedding(feature_spec["vocab_size"], 
                                                     feat_emb_dim, 
@@ -176,7 +176,3 @@ class EmbeddingDictLayer(nn.Module):
                     embedding_vec = self.embedding_hooks[feature](embedding_vec)
                 feature_emb_dict[feature] = embedding_vec
         return feature_emb_dict
-
-
-
-
